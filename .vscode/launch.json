@@ -1,0 +1,30 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Launch Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "Launch Registry",
+            "request": "launch",
+            "mainClass": "Registry",
+            "projectName": "Iteration1_3465a19",
+            "args": ["192.168.1.71", "55921"]
+        },
+        {
+            "type": "java",
+            "name": "Launch client",
+            "request": "launch",
+            "mainClass": "client",
+            "projectName": "Iteration1_3465a19",
+            "args": ["192.168.1.71" , "55921"]
+        }
+    ]
+}

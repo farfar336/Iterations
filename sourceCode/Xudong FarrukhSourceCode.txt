@@ -1,0 +1,1021 @@
+Fri Jan 29 13:28:58 MST 2021
+Java
+import java.io.*;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Scanner;
+public class client{
+	public static String teamName="Xudong Farrukh\n";
+	public static String codeResponse="Java\n";
+	public static int numOfPeers=0;
+	public static String peers="";
+	public static String date="";
+	public static String command=null;
+	public static String numOfSource="1";
+	public static String sourceLocation="136.159.5.22:55921";
+	public static int port=55921;
+	
+	//write the team name to the server.
+	public static void getTeamName(Socket client) throws IOException {
+		String response=teamName;
+		System.out.println(response);
+		client.getOutputStream().write(response.getBytes());
+	}
+	//send the code response to server.
+	public static void codeRequest(Socket client) throws IOException {
+		//put the source code into sourceCode in order to send to the server
+		String sourceCode="";
+		String end="\n...\n";
+		String response=codeResponse+sourceCode+end;
+		System.out.println(response);
+		client.getOutputStream().write(response.getBytes());
+		System.out.println("get code finished");
+	}
+	//send the report to server
+	public static void getReport(Socket client) throws IOException {
+		date=(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(new Date());
+		String response=numOfPeers+"\n"+peers+"\n"+numOfSource+"\n"+sourceLocation+"\n"+date+"\n"+numOfPeers+"\n"+peers+"\n";
+		System.out.println(response);
+		client.getOutputStream().write(response.getBytes());
+		System.out.println("get report finished");
+	}
+	
+	//receive and store peers
+	public static void receivePeers(BufferedReader reader) throws NumberFormatException, IOException {
+		int num=Integer.parseInt(reader.readLine());
+		numOfPeers+=num;
+		System.out.println("num of peers :"+num+"\n");
+		if(num!=0) {
+			for(int i=0;i<num;i++) {
+				peers=reader.readLine();
+				
+			}
+			
+		}
+		System.out.println("receive peers finished");
+	}
+    public static void main(String[] args) throws IOException{
+    	//open a new socket, the first command line argument is the ip address, 55921 is default port number
+        Socket client=new Socket(args[0].toString(),port);
+        BufferedReader reader=new BufferedReader(new InputStreamReader(client.getInputStream()));
+        while (!(command=reader.readLine()).startsWith("close")) {
+        	System.out.println(command);
+        	switch(command) {
+        	case "get team name":
+        		getTeamName(client);
+        		break;
+        	case "get code":
+        		codeRequest(client);
+        		break;
+        	case "receive peers":	
+        		receivePeers(reader);
+        		break;
+        	case "get report":
+        		getReport(client);	
+        		break;
+        	}
+
+        }
+        client.close();
+    }
+}
+Sun Feb 14 17:41:08 MST 2021
+Java
+import java.io.*;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+public class client{
+	public static String teamName="Xudong Farrukh\n";
+	public static String codeResponse="Java\n";
+	public static int numOfPeers=0;
+	public static String peers="";
+	public static ArrayList<String> peerList;
+	public static String date="";
+	public static String command=null;
+	public static int numOfSource=0;
+	public static String sourceLocation;
+	public static int port;
+	public static String ip;
+	public static HashMap<String, String> hashmap;
+	//write the team name to the server.
+	public static void getTeamName(Socket client) throws IOException {
+		String response=teamName;
+		System.out.println(response);
+		client.getOutputStream().write(response.getBytes());
+	}
+	//send the code response to server.
+	public static void codeRequest(Socket client) throws IOException {
+		//put the source code into sourceCode in order to send to the server
+		String sourceCode="";
+		String end="\n...\n";
+		String response=codeResponse+sourceCode+end;
+		client.getOutputStream().write(response.getBytes());
+		System.out.println("get code finished");
+	}
+	//send the report to server
+	public static void getReport(Socket client) throws IOException {
+		peers="";
+		for (int i=0;i<peerList.size();i++) {
+			peers+=peerList.get(i)+"\n";
+		}
+		String response=numOfPeers+"\n"+peers+numOfSource+"\n";;
+		for(Map.Entry<String, String> entry : hashmap.entrySet()) {
+		    String key = entry.getKey().split("\n")[0];
+		    Date getDate  =new Date( Long.parseLong(entry.getKey().split("\n")[1]));
+		    date=(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(getDate);
+		    response+=key+"\n"+date+"\n";
+		    String value = entry.getValue();
+		    response+=value.split("\n").length+"\n";
+		    response+=value;  
+		}
+		System.out.println(response);
+		client.getOutputStream().write(response.getBytes());
+		System.out.println("get report finished");
+	}
+	
+	//receive and store peers
+	public static void receivePeers(BufferedReader reader) throws NumberFormatException, IOException {
+		long time=new Timestamp(System.currentTimeMillis()).getTime();
+		System.out.println(date);
+		int num=Integer.parseInt(reader.readLine());
+		if(num>0) {
+			numOfSource+=1;
+		}
+		numOfPeers+=num;
+		System.out.println("num of peers :"+num+"\n");
+		if(num!=0) {
+			peers="";
+			for(int i=0;i<num;i++) {
+				String peer=reader.readLine();		
+				if(!peerList.contains(peer)) {
+					peerList.add(peer);
+				}else {
+					numOfPeers-=1;
+				}
+				peers+=peer;
+				peers+="\n";
+			}
+			String key=sourceLocation+"\n"+time;
+			String value=peers;
+			hashmap.put(key,value);
+		}
+		System.out.println("receive peers finished");
+	}
+    public static void main(String[] args) throws IOException{
+    	ip=args[0];
+    	port=Integer.parseInt(args[1]);
+    	sourceLocation=ip+":"+port;
+        Socket client=new Socket(ip,port);
+        peerList =new ArrayList<String>();
+        hashmap=new HashMap<String, String>();
+        BufferedReader reader=new BufferedReader(new InputStreamReader(client.getInputStream()));
+        while (!(command=reader.readLine()).startsWith("close")) {
+        	System.out.println(command);
+        	switch(command) {
+        	case "get team name":
+        		getTeamName(client);
+        		break;
+        	case "get code":
+        		codeRequest(client);
+        		break;
+        	case "receive peers":	
+        		receivePeers(reader);
+        		break;
+        	case "get report":
+        		getReport(client);	
+        		break;
+        	}
+
+        }
+        client.close();
+    }
+}
+Sun Feb 14 18:00:12 MST 2021
+Java
+import java.io.*;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+public class client{
+	public static String teamName="Xudong Farrukh\n";
+	public static String codeResponse="Java\n";
+	public static int numOfPeers=0;
+	public static String peers="";
+	public static ArrayList<String> peerList;
+	public static String date="";
+	public static String command=null;
+	public static int numOfSource=0;
+	public static String sourceLocation;
+	public static int port;
+	public static String ip;
+	public static HashMap<String, String> hashmap;
+	//write the team name to the server.
+	public static void getTeamName(Socket client) throws IOException {
+		String response=teamName;
+		System.out.println(response);
+		client.getOutputStream().write(response.getBytes());
+	}
+	//send the code response to server.
+	public static void codeRequest(Socket client) throws IOException {
+		//put the source code into sourceCode in order to send to the server
+		String sourceCode="";
+		String end="\n...\n";
+		String response=codeResponse+sourceCode+end;
+		client.getOutputStream().write(response.getBytes());
+		System.out.println("get code finished");
+	}
+	//send the report to server
+	public static void getReport(Socket client) throws IOException {
+		peers="";
+		for (int i=0;i<peerList.size();i++) {
+			peers+=peerList.get(i)+"\n";
+		}
+		String response=numOfPeers+"\n"+peers+numOfSource+"\n";;
+		for(Map.Entry<String, String> entry : hashmap.entrySet()) {
+		    String key = entry.getKey().split("\n")[0];
+		    Date getDate  =new Date( Long.parseLong(entry.getKey().split("\n")[1]));
+		    date=(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(getDate);
+		    response+=key+"\n"+date+"\n";
+		    String value = entry.getValue();
+		    response+=value.split("\n").length+"\n";
+		    response+=value;  
+		}
+		System.out.println(response);
+		client.getOutputStream().write(response.getBytes());
+		System.out.println("get report finished");
+	}
+	
+	//receive and store peers
+	public static void receivePeers(BufferedReader reader) throws NumberFormatException, IOException {
+		long time=new Timestamp(System.currentTimeMillis()).getTime();
+		System.out.println(date);
+		int num=Integer.parseInt(reader.readLine());
+		if(num>0) {
+			numOfSource+=1;
+		}
+		numOfPeers+=num;
+		System.out.println("num of peers :"+num+"\n");
+		if(num!=0) {
+			peers="";
+			for(int i=0;i<num;i++) {
+				String peer=reader.readLine();		
+				if(!peerList.contains(peer)) {
+					peerList.add(peer);
+				}else {
+					numOfPeers-=1;
+				}
+				peers+=peer;
+				peers+="\n";
+			}
+			String key=sourceLocation+"\n"+time;
+			String value=peers;
+			hashmap.put(key,value);
+		}
+		System.out.println("receive peers finished");
+	}
+    public static void main(String[] args) throws IOException{
+    	ip=args[0];
+    	port=Integer.parseInt(args[1]);
+    	sourceLocation=ip+":"+port;
+        Socket client=new Socket(ip,port);
+        peerList =new ArrayList<String>();
+        hashmap=new HashMap<String, String>();
+        BufferedReader reader=new BufferedReader(new InputStreamReader(client.getInputStream()));
+        while (!(command=reader.readLine()).startsWith("close")) {
+        	System.out.println(command);
+        	switch(command) {
+        	case "get team name":
+        		getTeamName(client);
+        		break;
+        	case "get code":
+        		codeRequest(client);
+        		break;
+        	case "receive peers":	
+        		receivePeers(reader);
+        		break;
+        	case "get report":
+        		getReport(client);	
+        		break;
+        	}
+
+        }
+        client.close();
+    }
+}
+Sun Feb 14 18:00:52 MST 2021
+Java
+import java.io.*;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+public class client{
+	public static String teamName="Xudong Farrukh\n";
+	public static String codeResponse="Java\n";
+	public static int numOfPeers=0;
+	public static String peers="";
+	public static ArrayList<String> peerList;
+	public static String date="";
+	public static String command=null;
+	public static int numOfSource=0;
+	public static String sourceLocation;
+	public static int port;
+	public static String ip;
+	public static HashMap<String, String> hashmap;
+	//write the team name to the server.
+	public static void getTeamName(Socket client) throws IOException {
+		String response=teamName;
+		System.out.println(response);
+		client.getOutputStream().write(response.getBytes());
+	}
+	//send the code response to server.
+	public static void codeRequest(Socket client) throws IOException {
+		//put the source code into sourceCode in order to send to the server
+		String sourceCode="";
+		String end="\n...\n";
+		String response=codeResponse+sourceCode+end;
+		client.getOutputStream().write(response.getBytes());
+		System.out.println("get code finished");
+	}
+	//send the report to server
+	public static void getReport(Socket client) throws IOException {
+		peers="";
+		for (int i=0;i<peerList.size();i++) {
+			peers+=peerList.get(i)+"\n";
+		}
+		String response=numOfPeers+"\n"+peers+numOfSource+"\n";;
+		for(Map.Entry<String, String> entry : hashmap.entrySet()) {
+		    String key = entry.getKey().split("\n")[0];
+		    Date getDate  =new Date( Long.parseLong(entry.getKey().split("\n")[1]));
+		    date=(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(getDate);
+		    response+=key+"\n"+date+"\n";
+		    String value = entry.getValue();
+		    response+=value.split("\n").length+"\n";
+		    response+=value;  
+		}
+		System.out.println(response);
+		client.getOutputStream().write(response.getBytes());
+		System.out.println("get report finished");
+	}
+	
+	//receive and store peers
+	public static void receivePeers(BufferedReader reader) throws NumberFormatException, IOException {
+		long time=new Timestamp(System.currentTimeMillis()).getTime();
+		System.out.println(date);
+		int num=Integer.parseInt(reader.readLine());
+		if(num>0) {
+			numOfSource+=1;
+		}
+		numOfPeers+=num;
+		System.out.println("num of peers :"+num+"\n");
+		if(num!=0) {
+			peers="";
+			for(int i=0;i<num;i++) {
+				String peer=reader.readLine();		
+				if(!peerList.contains(peer)) {
+					peerList.add(peer);
+				}else {
+					numOfPeers-=1;
+				}
+				peers+=peer;
+				peers+="\n";
+			}
+			String key=sourceLocation+"\n"+time;
+			String value=peers;
+			hashmap.put(key,value);
+		}
+		System.out.println("receive peers finished");
+	}
+    public static void main(String[] args) throws IOException{
+    	ip=args[0];
+    	port=Integer.parseInt(args[1]);
+    	sourceLocation=ip+":"+port;
+        Socket client=new Socket(ip,port);
+        peerList =new ArrayList<String>();
+        hashmap=new HashMap<String, String>();
+        BufferedReader reader=new BufferedReader(new InputStreamReader(client.getInputStream()));
+        while (!(command=reader.readLine()).startsWith("close")) {
+        	System.out.println(command);
+        	switch(command) {
+        	case "get team name":
+        		getTeamName(client);
+        		break;
+        	case "get code":
+        		codeRequest(client);
+        		break;
+        	case "receive peers":	
+        		receivePeers(reader);
+        		break;
+        	case "get report":
+        		getReport(client);	
+        		break;
+        	}
+
+        }
+        client.close();
+    }
+}
+Sun Feb 14 18:01:32 MST 2021
+Java
+import java.io.*;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+public class client{
+	public static String teamName="Xudong Farrukh\n";
+	public static String codeResponse="Java\n";
+	public static int numOfPeers=0;
+	public static String peers="";
+	public static ArrayList<String> peerList;
+	public static String date="";
+	public static String command=null;
+	public static int numOfSource=0;
+	public static String sourceLocation;
+	public static int port;
+	public static String ip;
+	public static HashMap<String, String> hashmap;
+	//write the team name to the server.
+	public static void getTeamName(Socket client) throws IOException {
+		String response=teamName;
+		System.out.println(response);
+		client.getOutputStream().write(response.getBytes());
+	}
+	//send the code response to server.
+	public static void codeRequest(Socket client) throws IOException {
+		//put the source code into sourceCode in order to send to the server
+		String sourceCode="";
+		String end="\n...\n";
+		String response=codeResponse+sourceCode+end;
+		client.getOutputStream().write(response.getBytes());
+		System.out.println("get code finished");
+	}
+	//send the report to server
+	public static void getReport(Socket client) throws IOException {
+		peers="";
+		for (int i=0;i<peerList.size();i++) {
+			peers+=peerList.get(i)+"\n";
+		}
+		String response=numOfPeers+"\n"+peers+numOfSource+"\n";;
+		for(Map.Entry<String, String> entry : hashmap.entrySet()) {
+		    String key = entry.getKey().split("\n")[0];
+		    Date getDate  =new Date( Long.parseLong(entry.getKey().split("\n")[1]));
+		    date=(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(getDate);
+		    response+=key+"\n"+date+"\n";
+		    String value = entry.getValue();
+		    response+=value.split("\n").length+"\n";
+		    response+=value;  
+		}
+		System.out.println(response);
+		client.getOutputStream().write(response.getBytes());
+		System.out.println("get report finished");
+	}
+	
+	//receive and store peers
+	public static void receivePeers(BufferedReader reader) throws NumberFormatException, IOException {
+		long time=new Timestamp(System.currentTimeMillis()).getTime();
+		System.out.println(date);
+		int num=Integer.parseInt(reader.readLine());
+		if(num>0) {
+			numOfSource+=1;
+		}
+		numOfPeers+=num;
+		System.out.println("num of peers :"+num+"\n");
+		if(num!=0) {
+			peers="";
+			for(int i=0;i<num;i++) {
+				String peer=reader.readLine();		
+				if(!peerList.contains(peer)) {
+					peerList.add(peer);
+				}else {
+					numOfPeers-=1;
+				}
+				peers+=peer;
+				peers+="\n";
+			}
+			String key=sourceLocation+"\n"+time;
+			String value=peers;
+			hashmap.put(key,value);
+		}
+		System.out.println("receive peers finished");
+	}
+    public static void main(String[] args) throws IOException{
+    	ip=args[0];
+    	port=Integer.parseInt(args[1]);
+    	sourceLocation=ip+":"+port;
+        Socket client=new Socket(ip,port);
+        peerList =new ArrayList<String>();
+        hashmap=new HashMap<String, String>();
+        BufferedReader reader=new BufferedReader(new InputStreamReader(client.getInputStream()));
+        while (!(command=reader.readLine()).startsWith("close")) {
+        	System.out.println(command);
+        	switch(command) {
+        	case "get team name":
+        		getTeamName(client);
+        		break;
+        	case "get code":
+        		codeRequest(client);
+        		break;
+        	case "receive peers":	
+        		receivePeers(reader);
+        		break;
+        	case "get report":
+        		getReport(client);	
+        		break;
+        	}
+
+        }
+        client.close();
+    }
+}
+Sun Feb 14 18:01:37 MST 2021
+Java
+import java.io.*;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+public class client{
+	public static String teamName="Xudong Farrukh\n";
+	public static String codeResponse="Java\n";
+	public static int numOfPeers=0;
+	public static String peers="";
+	public static ArrayList<String> peerList;
+	public static String date="";
+	public static String command=null;
+	public static int numOfSource=0;
+	public static String sourceLocation;
+	public static int port;
+	public static String ip;
+	public static HashMap<String, String> hashmap;
+	//write the team name to the server.
+	public static void getTeamName(Socket client) throws IOException {
+		String response=teamName;
+		System.out.println(response);
+		client.getOutputStream().write(response.getBytes());
+	}
+	//send the code response to server.
+	public static void codeRequest(Socket client) throws IOException {
+		//put the source code into sourceCode in order to send to the server
+		String sourceCode="";
+		String end="\n...\n";
+		String response=codeResponse+sourceCode+end;
+		client.getOutputStream().write(response.getBytes());
+		System.out.println("get code finished");
+	}
+	//send the report to server
+	public static void getReport(Socket client) throws IOException {
+		peers="";
+		for (int i=0;i<peerList.size();i++) {
+			peers+=peerList.get(i)+"\n";
+		}
+		String response=numOfPeers+"\n"+peers+numOfSource+"\n";;
+		for(Map.Entry<String, String> entry : hashmap.entrySet()) {
+		    String key = entry.getKey().split("\n")[0];
+		    Date getDate  =new Date( Long.parseLong(entry.getKey().split("\n")[1]));
+		    date=(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(getDate);
+		    response+=key+"\n"+date+"\n";
+		    String value = entry.getValue();
+		    response+=value.split("\n").length+"\n";
+		    response+=value;  
+		}
+		System.out.println(response);
+		client.getOutputStream().write(response.getBytes());
+		System.out.println("get report finished");
+	}
+	
+	//receive and store peers
+	public static void receivePeers(BufferedReader reader) throws NumberFormatException, IOException {
+		long time=new Timestamp(System.currentTimeMillis()).getTime();
+		System.out.println(date);
+		int num=Integer.parseInt(reader.readLine());
+		if(num>0) {
+			numOfSource+=1;
+		}
+		numOfPeers+=num;
+		System.out.println("num of peers :"+num+"\n");
+		if(num!=0) {
+			peers="";
+			for(int i=0;i<num;i++) {
+				String peer=reader.readLine();		
+				if(!peerList.contains(peer)) {
+					peerList.add(peer);
+				}else {
+					numOfPeers-=1;
+				}
+				peers+=peer;
+				peers+="\n";
+			}
+			String key=sourceLocation+"\n"+time;
+			String value=peers;
+			hashmap.put(key,value);
+		}
+		System.out.println("receive peers finished");
+	}
+    public static void main(String[] args) throws IOException{
+    	ip=args[0];
+    	port=Integer.parseInt(args[1]);
+    	sourceLocation=ip+":"+port;
+        Socket client=new Socket(ip,port);
+        peerList =new ArrayList<String>();
+        hashmap=new HashMap<String, String>();
+        BufferedReader reader=new BufferedReader(new InputStreamReader(client.getInputStream()));
+        while (!(command=reader.readLine()).startsWith("close")) {
+        	System.out.println(command);
+        	switch(command) {
+        	case "get team name":
+        		getTeamName(client);
+        		break;
+        	case "get code":
+        		codeRequest(client);
+        		break;
+        	case "receive peers":	
+        		receivePeers(reader);
+        		break;
+        	case "get report":
+        		getReport(client);	
+        		break;
+        	}
+
+        }
+        client.close();
+    }
+}
+Sun Feb 14 18:02:26 MST 2021
+Java
+import java.io.*;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+public class client{
+	public static String teamName="Xudong Farrukh\n";
+	public static String codeResponse="Java\n";
+	public static int numOfPeers=0;
+	public static String peers="";
+	public static ArrayList<String> peerList;
+	public static String date="";
+	public static String command=null;
+	public static int numOfSource=0;
+	public static String sourceLocation;
+	public static int port;
+	public static String ip;
+	public static HashMap<String, String> hashmap;
+	//write the team name to the server.
+	public static void getTeamName(Socket client) throws IOException {
+		String response=teamName;
+		System.out.println(response);
+		client.getOutputStream().write(response.getBytes());
+	}
+	//send the code response to server.
+	public static void codeRequest(Socket client) throws IOException {
+		//put the source code into sourceCode in order to send to the server
+		String sourceCode="";
+		String end="\n...\n";
+		String response=codeResponse+sourceCode+end;
+		client.getOutputStream().write(response.getBytes());
+		System.out.println("get code finished");
+	}
+	//send the report to server
+	public static void getReport(Socket client) throws IOException {
+		peers="";
+		for (int i=0;i<peerList.size();i++) {
+			peers+=peerList.get(i)+"\n";
+		}
+		String response=numOfPeers+"\n"+peers+numOfSource+"\n";;
+		for(Map.Entry<String, String> entry : hashmap.entrySet()) {
+		    String key = entry.getKey().split("\n")[0];
+		    Date getDate  =new Date( Long.parseLong(entry.getKey().split("\n")[1]));
+		    date=(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(getDate);
+		    response+=key+"\n"+date+"\n";
+		    String value = entry.getValue();
+		    response+=value.split("\n").length+"\n";
+		    response+=value;  
+		}
+		System.out.println(response);
+		client.getOutputStream().write(response.getBytes());
+		System.out.println("get report finished");
+	}
+	
+	//receive and store peers
+	public static void receivePeers(BufferedReader reader) throws NumberFormatException, IOException {
+		long time=new Timestamp(System.currentTimeMillis()).getTime();
+		System.out.println(date);
+		int num=Integer.parseInt(reader.readLine());
+		if(num>0) {
+			numOfSource+=1;
+		}
+		numOfPeers+=num;
+		System.out.println("num of peers :"+num+"\n");
+		if(num!=0) {
+			peers="";
+			for(int i=0;i<num;i++) {
+				String peer=reader.readLine();		
+				if(!peerList.contains(peer)) {
+					peerList.add(peer);
+				}else {
+					numOfPeers-=1;
+				}
+				peers+=peer;
+				peers+="\n";
+			}
+			String key=sourceLocation+"\n"+time;
+			String value=peers;
+			hashmap.put(key,value);
+		}
+		System.out.println("receive peers finished");
+	}
+    public static void main(String[] args) throws IOException{
+    	ip=args[0];
+    	port=Integer.parseInt(args[1]);
+    	sourceLocation=ip+":"+port;
+        Socket client=new Socket(ip,port);
+        peerList =new ArrayList<String>();
+        hashmap=new HashMap<String, String>();
+        BufferedReader reader=new BufferedReader(new InputStreamReader(client.getInputStream()));
+        while (!(command=reader.readLine()).startsWith("close")) {
+        	System.out.println(command);
+        	switch(command) {
+        	case "get team name":
+        		getTeamName(client);
+        		break;
+        	case "get code":
+        		codeRequest(client);
+        		break;
+        	case "receive peers":	
+        		receivePeers(reader);
+        		break;
+        	case "get report":
+        		getReport(client);	
+        		break;
+        	}
+
+        }
+        client.close();
+    }
+}
+Sun Feb 14 18:04:45 MST 2021
+Java
+import java.io.*;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+public class client{
+	public static String teamName="Xudong Farrukh\n";
+	public static String codeResponse="Java\n";
+	public static int numOfPeers=0;
+	public static String peers="";
+	public static ArrayList<String> peerList;
+	public static String date="";
+	public static String command=null;
+	public static int numOfSource=0;
+	public static String sourceLocation;
+	public static int port;
+	public static String ip;
+	public static HashMap<String, String> hashmap;
+	//write the team name to the server.
+	public static void getTeamName(Socket client) throws IOException {
+		String response=teamName;
+		System.out.println(response);
+		client.getOutputStream().write(response.getBytes());
+	}
+	//send the code response to server.
+	public static void codeRequest(Socket client) throws IOException {
+		//put the source code into sourceCode in order to send to the server
+		String sourceCode="";
+		String end="\n...\n";
+		String response=codeResponse+sourceCode+end;
+		client.getOutputStream().write(response.getBytes());
+		System.out.println("get code finished");
+	}
+	//send the report to server
+	public static void getReport(Socket client) throws IOException {
+		peers="";
+		for (int i=0;i<peerList.size();i++) {
+			peers+=peerList.get(i)+"\n";
+		}
+		String response=numOfPeers+"\n"+peers+numOfSource+"\n";;
+		for(Map.Entry<String, String> entry : hashmap.entrySet()) {
+		    String key = entry.getKey().split("\n")[0];
+		    Date getDate  =new Date( Long.parseLong(entry.getKey().split("\n")[1]));
+		    date=(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(getDate);
+		    response+=key+"\n"+date+"\n";
+		    String value = entry.getValue();
+		    response+=value.split("\n").length+"\n";
+		    response+=value;  
+		}
+		System.out.println(response);
+		client.getOutputStream().write(response.getBytes());
+		System.out.println("get report finished");
+	}
+	
+	//receive and store peers
+	public static void receivePeers(BufferedReader reader) throws NumberFormatException, IOException {
+		long time=new Timestamp(System.currentTimeMillis()).getTime();
+		System.out.println(date);
+		int num=Integer.parseInt(reader.readLine());
+		if(num>0) {
+			numOfSource+=1;
+		}
+		numOfPeers+=num;
+		System.out.println("num of peers :"+num+"\n");
+		if(num!=0) {
+			peers="";
+			for(int i=0;i<num;i++) {
+				String peer=reader.readLine();		
+				if(!peerList.contains(peer)) {
+					peerList.add(peer);
+				}else {
+					numOfPeers-=1;
+				}
+				peers+=peer;
+				peers+="\n";
+			}
+			String key=sourceLocation+"\n"+time;
+			String value=peers;
+			hashmap.put(key,value);
+		}
+		System.out.println("receive peers finished");
+	}
+    public static void main(String[] args) throws IOException{
+    	ip=args[0];
+    	port=Integer.parseInt(args[1]);
+    	sourceLocation=ip+":"+port;
+        Socket client=new Socket(ip,port);
+        peerList =new ArrayList<String>();
+        hashmap=new HashMap<String, String>();
+        BufferedReader reader=new BufferedReader(new InputStreamReader(client.getInputStream()));
+        while (!(command=reader.readLine()).startsWith("close")) {
+        	System.out.println(command);
+        	switch(command) {
+        	case "get team name":
+        		getTeamName(client);
+        		break;
+        	case "get code":
+        		codeRequest(client);
+        		break;
+        	case "receive peers":	
+        		receivePeers(reader);
+        		break;
+        	case "get report":
+        		getReport(client);	
+        		break;
+        	}
+
+        }
+        client.close();
+    }
+}
+Sun Feb 14 18:05:53 MST 2021
+Java
+import java.io.*;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+public class client{
+	public static String teamName="Xudong Farrukh\n";
+	public static String codeResponse="Java\n";
+	public static int numOfPeers=0;
+	public static String peers="";
+	public static ArrayList<String> peerList;
+	public static String date="";
+	public static String command=null;
+	public static int numOfSource=0;
+	public static String sourceLocation;
+	public static int port;
+	public static String ip;
+	public static HashMap<String, String> hashmap;
+	//write the team name to the server.
+	public static void getTeamName(Socket client) throws IOException {
+		String response=teamName;
+		System.out.println(response);
+		client.getOutputStream().write(response.getBytes());
+	}
+	//send the code response to server.
+	public static void codeRequest(Socket client) throws IOException {
+		//put the source code into sourceCode in order to send to the server
+		String sourceCode="";
+		String end="\n...\n";
+		String response=codeResponse+sourceCode+end;
+		client.getOutputStream().write(response.getBytes());
+		System.out.println("get code finished");
+	}
+	//send the report to server
+	public static void getReport(Socket client) throws IOException {
+		peers="";
+		for (int i=0;i<peerList.size();i++) {
+			peers+=peerList.get(i)+"\n";
+		}
+		String response=numOfPeers+"\n"+peers+numOfSource+"\n";;
+		for(Map.Entry<String, String> entry : hashmap.entrySet()) {
+		    String key = entry.getKey().split("\n")[0];
+		    Date getDate  =new Date( Long.parseLong(entry.getKey().split("\n")[1]));
+		    date=(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(getDate);
+		    response+=key+"\n"+date+"\n";
+		    String value = entry.getValue();
+		    response+=value.split("\n").length+"\n";
+		    response+=value;  
+		}
+		System.out.println(response);
+		client.getOutputStream().write(response.getBytes());
+		System.out.println("get report finished");
+	}
+	
+	//receive and store peers
+	public static void receivePeers(BufferedReader reader) throws NumberFormatException, IOException {
+		long time=new Timestamp(System.currentTimeMillis()).getTime();
+		System.out.println(date);
+		int num=Integer.parseInt(reader.readLine());
+		if(num>0) {
+			numOfSource+=1;
+		}
+		numOfPeers+=num;
+		System.out.println("num of peers :"+num+"\n");
+		if(num!=0) {
+			peers="";
+			for(int i=0;i<num;i++) {
+				String peer=reader.readLine();		
+				if(!peerList.contains(peer)) {
+					peerList.add(peer);
+				}else {
+					numOfPeers-=1;
+				}
+				peers+=peer;
+				peers+="\n";
+			}
+			String key=sourceLocation+"\n"+time;
+			String value=peers;
+			hashmap.put(key,value);
+		}
+		System.out.println("receive peers finished");
+	}
+    public static void main(String[] args) throws IOException{
+    	ip=args[0];
+    	port=Integer.parseInt(args[1]);
+    	sourceLocation=ip+":"+port;
+        Socket client=new Socket(ip,port);
+        peerList =new ArrayList<String>();
+        hashmap=new HashMap<String, String>();
+        BufferedReader reader=new BufferedReader(new InputStreamReader(client.getInputStream()));
+        while (!(command=reader.readLine()).startsWith("close")) {
+        	System.out.println(command);
+        	switch(command) {
+        	case "get team name":
+        		getTeamName(client);
+        		break;
+        	case "get code":
+        		codeRequest(client);
+        		break;
+        	case "receive peers":	
+        		receivePeers(reader);
+        		break;
+        	case "get report":
+        		getReport(client);	
+        		break;
+        	}
+
+        }
+        client.close();
+    }
+}

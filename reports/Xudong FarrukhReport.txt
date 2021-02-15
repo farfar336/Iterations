@@ -1,0 +1,42 @@
+Fri Jan 29 13:28:58 MST 2021
+1 in list: 127.0.0.1:63807 
+1 sources:
+Source: 136.159.5.22:55921
+Date: 2021-01-29 13:28:58
+Num of peers received: 1
+127.0.0.1:63807 
+Sun Feb 14 17:41:08 MST 2021
+1 in list: 192.168.1.71:60471 
+1 sources:
+Source: 192.168.1.71:55921
+Date: 2021-02-14 17:41:08
+Num of peers received: 1
+192.168.1.71:60471 
+Sun Feb 14 18:01:32 MST 2021
+1 in list: 192.168.1.71:60598 
+1 sources:
+Source: 192.168.1.71:55921
+Date: 2021-02-14 18:01:32
+Num of peers received: 1
+192.168.1.71:60598 
+Sun Feb 14 18:02:26 MST 2021
+1 in list: 192.168.1.71:60601 
+1 sources:
+Source: 192.168.1.71:55921
+Date: 2021-02-14 18:02:26
+Num of peers received: 1
+192.168.1.71:60601 
+Sun Feb 14 18:04:45 MST 2021
+1 in list: 192.168.1.71:60603 
+1 sources:
+Source: 192.168.1.71:55921
+Date: 2021-02-14 18:04:45
+Num of peers received: 1
+192.168.1.71:60603 
+Sun Feb 14 18:05:53 MST 2021
+1 in list: 192.168.1.71:60606 
+1 sources:
+Source: 192.168.1.71:55921
+Date: 2021-02-14 18:05:53
+Num of peers received: 1
+192.168.1.71:60606 
