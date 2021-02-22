@@ -266,7 +266,7 @@ public class client{
         peerList = new ArrayList <String>();
         peersHashMap = new HashMap<String, String>();
 
-		// Process requests
+		// Process initial requests
 		while (!(request = reader.readLine()).startsWith("close")) {
 			System.out.println(teamName + " - Request received: " + request);
 			switch(request) {
@@ -282,8 +282,9 @@ public class client{
 			case "get report":
 				reportRequest(clientSocket);	
 				break;
-			case "get location": //To do: This does not get processed. Fix.
+			case "get location":
 				locationRequest(clientSocket);
+				break;
 			}
 		}
 
