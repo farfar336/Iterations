@@ -1,8 +1,23 @@
 /*
-To do: Document the following, specified by the TA:
-	-state briefly that functional programming is the approach at play here
-	-break down the general flow and structure of your script/program
-	-Mention key classnames, function names, design patterns used, etc... Try to form somewhat of a cohesive narrative in this section, so it reads like a passage from your favorite novel. 
+To do: 
+	Document the following, specified by the TA:
+		-state briefly that functional programming is the approach at play here [Farrukh]
+		-break down the general flow and structure of your script/program [Farrukh]
+		-Mention key classnames, function names, design patterns used, etc... Try to form somewhat of a cohesive narrative in this section, so it reads like a passage from your favorite novel.  [Farrukh]
+
+	Code requirements:
+		-Location Request [Farrukh]
+		-Updated Report Request [Farrukh]
+		-Group management requirements (peer UDP/IP messages) [Xudong]
+		-User interface and snippets requirements (snip UDP/IP messages) [Xudong]
+		-Shutting down system requirements (stop UDP/IP messages) [Xudong]
+
+	Other requirements:
+		-Class diagram of your solution to the D2L dropbox for this iteration. [Farrukh]
+		-A video that gives a brief explanation of your implementation and shows your peer in action. The length
+		of your video should be between 2 and 7 minutes. Only the first 7 minutes of your video will be viewed
+		when grading. Use the same D2L dropbox to either upload the video or provide a link to your video. [Farrukh]
+		-Running your peer on Friday Feb 26 between 1pm and 2pm. [Farrukh] [Xudong]
 */
 
 // Importing libraries
