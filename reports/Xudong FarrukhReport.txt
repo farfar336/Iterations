@@ -40,3 +40,122 @@ Source: 192.168.1.71:55921
 Date: 2021-02-14 18:05:53
 Num of peers received: 1
 192.168.1.71:60606 
+Sun Feb 21 12:29:44 MST 2021
+1 in list: 192.168.1.64:55555 
+1 sources:
+Source: Server IP and Port Number: 192.168.1.64:55921
+Date: Today's date: 2021-02-21 12:29:44
+Num of peers received: 1
+Peer IP and Port Number: 192.168.1.64:55555 
+Sun Feb 21 12:30:14 MST 2021
+1 in list: 192.168.1.64:55560 
+1 sources:
+Source: Server IP and Port Number: 192.168.1.64:55921
+Date: Today's date: 2021-02-21 12:30:14
+Num of peers received: 1
+Peer IP and Port Number: 192.168.1.64:55560 
+Sun Feb 21 12:49:02 MST 2021
+1 in list: 192.168.1.64:55702 
+1 sources:
+Source: Server IP and Port Number: 192.168.1.64:55921
+Date: Today's date: 2021-02-21 12:49:02
+Num of peers received: 1
+Peer IP and Port Number: 192.168.1.64:55702 
+Sun Feb 21 12:51:52 MST 2021
+1 in list: 192.168.1.64:55711 
+1 sources:
+Source: Server IP and Port Number: 192.168.1.64:55921
+Date: Today's date: 2021-02-21 12:51:52
+Num of peers received: 1
+Peer IP and Port Number: 192.168.1.64:55711 
+Sun Feb 21 12:52:38 MST 2021
+1 in list: 192.168.1.64:55720 
+1 sources:
+Source: Server IP and Port Number: 192.168.1.64:55921
+Date: Today's date: 2021-02-21 12:52:38
+Num of peers received: 1
+Peer IP and Port Number: 192.168.1.64:55720 
+Sun Feb 21 12:53:17 MST 2021
+1 in list: 192.168.1.64:55724 
+1 sources:
+Source: Server IP and Port Number: 192.168.1.64:55921
+Date: Today's date: 2021-02-21 12:53:17
+Num of peers received: 1
+Peer IP and Port Number: 192.168.1.64:55724 
+Sun Feb 21 12:56:29 MST 2021
+1 in list: 192.168.1.64:55747 
+1 sources:
+Source: Server IP and Port Number: 192.168.1.64:55921
+Date: Today's date: 2021-02-21 12:56:29
+Num of peers received: 1
+Peer IP and Port Number: 192.168.1.64:55747 
+Sun Feb 21 13:07:27 MST 2021
+1 in list: 192.168.1.64:55821 
+1 sources:
+Source: Server IP and Port Number: 192.168.1.64:55921
+Date: Today's date: 2021-02-21 13:07:27
+Num of peers received: 1
+Peer IP and Port Number: 192.168.1.64:55821 
+Sun Feb 21 13:08:25 MST 2021
+1 in list: 192.168.1.64:55831 
+1 sources:
+Source: Server IP and Port Number: 192.168.1.64:55921
+Date: Today's date: 2021-02-21 13:08:25
+Num of peers received: 1
+Peer IP and Port Number: 192.168.1.64:55831 
+Sun Feb 21 13:10:54 MST 2021
+1 in list: 192.168.1.64:55845 
+1 sources:
+Source: Server IP and Port Number: 192.168.1.64:55921
+Date: Today's date: 2021-02-21 13:10:54
+Num of peers received: 1
+Peer IP and Port Number: 192.168.1.64:55845 
+Sun Feb 21 13:11:26 MST 2021
+1 in list: 192.168.1.64:55853 
+1 sources:
+Source: Server IP and Port Number: 192.168.1.64:55921
+Date: Today's date: 2021-02-21 13:11:26
+Num of peers received: 1
+Peer IP and Port Number: 192.168.1.64:55853 
+Sun Feb 21 13:11:43 MST 2021
+1 in list: 192.168.1.64:55856 
+1 sources:
+Source: Server IP and Port Number: 192.168.1.64:55921
+Date: Today's date: 2021-02-21 13:11:43
+Num of peers received: 1
+Peer IP and Port Number: 192.168.1.64:55856 
+Sun Feb 21 13:12:14 MST 2021
+1 in list: 192.168.1.64:55858 
+1 sources:
+Source: Server IP and Port Number: 192.168.1.64:55921
+Date: Today's date: 2021-02-21 13:12:14
+Num of peers received: 1
+Peer IP and Port Number: 192.168.1.64:55858 
+Sun Feb 21 13:13:12 MST 2021
+1 in list: 192.168.1.64:55862 
+1 sources:
+Source: Server IP and Port Number: 192.168.1.64:55921
+Date: Today's date: 2021-02-21 13:13:12
+Num of peers received: 1
+Peer IP and Port Number: 192.168.1.64:55862 
+Sun Feb 21 13:16:26 MST 2021
+1 in list: 192.168.1.64:55878 
+1 sources:
+Source: Server IP and Port Number: 192.168.1.64:55921
+Date: Today's date: 2021-02-21 13:16:26
+Num of peers received: 1
+Peer IP and Port Number: 192.168.1.64:55878 
+Sun Feb 21 13:18:06 MST 2021
+1 in list: 192.168.1.64:55889 
+1 sources:
+Source: Server IP and Port Number: 192.168.1.64:55921
+Date: Today's date: 2021-02-21 13:18:06
+Num of peers received: 1
+Peer IP and Port Number: 192.168.1.64:55889 
+Sun Feb 21 13:19:50 MST 2021
+1 in list: 192.168.1.64:55895 
+1 sources:
+Source: Server IP and Port Number: 192.168.1.64:55921
+Date: Today's date: 2021-02-21 13:19:50
+Num of peers received: 1
+Peer IP and Port Number: 192.168.1.64:55895 

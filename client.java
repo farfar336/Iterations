@@ -1,3 +1,10 @@
+/*
+To do: Document the following, specified by the TA:
+	-state briefly that functional programming is the approach at play here
+	-break down the general flow and structure of your script/program
+	-Mention key classnames, function names, design patterns used, etc... Try to form somewhat of a cohesive narrative in this section, so it reads like a passage from your favorite novel. 
+*/
+
 // Importing libraries
 import java.io.*;
 import java.net.Socket;
@@ -9,17 +16,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class client{
-
 	// Global variables
-	public static String teamName = "Xudong Farrukh\n";
-	public static int totalPeers = 0;
-	public static String peers = "";
-	public static ArrayList<String> peerList;
-	public static String todaysDate = "";
-	public static String request = null;
-	public static int numOfSource = 0;
+	public static String teamName;
+	public static String serverIP;
+	public static int serverPort;
 	public static String sourceLocation;
+	public static int numOfSource;
+	public static int totalPeers;
+	public static String peers;
+	public static ArrayList<String> peerList;
 	public static HashMap<String, String> peersHashMap;
+	public static Socket clientSocket;
+	public static BufferedReader reader;
 
 	// Sends the string to the server
 	public static void sendToServer(String toServer, Socket clientSocket) throws IOException {
@@ -28,15 +36,19 @@ public class client{
 
 	// Sends the team name to the server
 	public static void teamNameRequest(Socket clientSocket) throws IOException {
-		String toServer = teamName;
+		String toServer = teamName + "\n";
 
-		System.out.println("Team name: " + toServer);
+		System.out.println(teamName + " - Received get team name request");
+		System.out.println(teamName + " - about to send team name ");
 		sendToServer(toServer, clientSocket);
-		System.out.println("get team name request finished");
+		System.out.println(teamName + " - Finished request");
 	}
 
 	// Sends the code to the server
 	public static void codeRequest(Socket clientSocket) throws IOException {
+		System.out.println(teamName + " - Received get code request");
+
+		// To do: Update this at the nd
 		//Put the source code into sourceCode in order to send to the server
 		String sourceCode = "import java.io.*;\r\n" + 
 				"import java.net.Socket;\r\n" + 
@@ -157,9 +169,9 @@ public class client{
 		String codeResponse = "Java\n";
 		String toServer = codeResponse + sourceCode + end;
 
-		System.out.println("To server: " + toServer);
+		System.out.println(teamName + " - about to send source code ");
 		sendToServer(toServer, clientSocket);
-		System.out.println("get code request finished");
+		System.out.println(teamName + " - Finished request");
 	}
 	
 	// Gets a list of peers and returns it in string format
@@ -174,6 +186,7 @@ public class client{
 	// Gets info about peers and returns info in string format
 	public static String getPeerInfo(){
 		String peerInfo = "";
+		String todaysDate;
 		for(Map.Entry<String, String> entry: peersHashMap.entrySet()) {
 		    String serverIPAndPortNumber = "Server IP and Port Number: " + entry.getKey().split("\n")[0];
 		    Date date = new Date( Long.parseLong(entry.getKey().split("\n")[1]));
@@ -186,21 +199,23 @@ public class client{
 		return peerInfo;
 	}
 
+	// To do: Update report request
 	//Gets report about peers and sends it to the server
 	public static void reportRequest(Socket clientSocket) throws IOException {
+		System.out.println(teamName + " - Received get report request");
+
 		peers = getPeers();
 		String toServer = totalPeers + "\n" + peers + numOfSource + "\n";
 		toServer += getPeerInfo();
 
-		System.out.println("To server: " + toServer);
+		System.out.println(teamName + " - about to send report");
 		sendToServer(toServer, clientSocket);
-		System.out.println("get report request finished");
+		System.out.println(teamName + " - Finished request");
 	}
 	
 	// Store peers 
 	public static void storePeers(int num, BufferedReader reader) throws NumberFormatException, IOException {
 		long time = new Timestamp(System.currentTimeMillis()).getTime();
-		System.out.println("Todays date: " + todaysDate); //To do: todaysDate prints nothing. Do we need this print statement?
 		
 		peers = "";
 		for(int i = 0; i < num; i ++) {
@@ -219,35 +234,37 @@ public class client{
 
 	// Receives and stores peers
 	public static void peersRequest(BufferedReader reader) throws NumberFormatException, IOException {
+		System.out.println(teamName + " - Received get peers request");
+		
 		int numOfPeersReceived = Integer.parseInt(reader.readLine());
 		if(numOfPeersReceived > 0) {
 			numOfSource += 1;
 		}
 		totalPeers += numOfPeersReceived;
-		System.out.println("Number of peers received: " + numOfPeersReceived + "\n");
 
 		if(numOfPeersReceived > 0) {
 			storePeers(numOfPeersReceived, reader);
 		}
 
-		System.out.println("receive peers request finished");
+		System.out.println(teamName + " - Finished request");
 	}
 
-    public static void main(String[] args) throws IOException{
-		// Connect client with the server
-		String serverIP = args[0];
-		int serverPort = Integer.parseInt(args[1]);
-    	sourceLocation = serverIP + ":" + serverPort;
-        Socket clientSocket = new Socket(serverIP, serverPort);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream())); 
+	// Sends the team name to the server
+	public static void locationRequest(Socket clientSocket) throws IOException {
+		System.out.println(teamName + " - Received get location request");
 
-		// Initialize arrays
-        peerList = new ArrayList <String>();
-        peersHashMap = new HashMap<String, String>();
+		String toServer = sourceLocation + "\n";
 
-		// Process requests
+		System.out.println("I'm at location: " + sourceLocation);
+		sendToServer(toServer, clientSocket);
+		System.out.println(teamName + " - Finished request");
+	}
+
+	// Process requests from the server
+	public static void processRequests() throws IOException{
+		String request;
 		while (!(request = reader.readLine()).startsWith("close")) {
-			System.out.println("Request: " + request);
+			System.out.println(teamName + " - Request received: " + request);
 			switch(request) {
 			case "get team name":
 				teamNameRequest(clientSocket);
@@ -261,8 +278,50 @@ public class client{
 			case "get report":
 				reportRequest(clientSocket);	
 				break;
+			case "get location":
+				locationRequest(clientSocket);
+				break;
 			}
 		}
 		clientSocket.close();
+	}
+
+	// Connect client to server
+	public static void connectClient(String serverIP, int serverPort)throws IOException{
+        clientSocket = new Socket(serverIP, serverPort);
+        reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream())); 
+	}
+
+	// Read command line arguements
+	public static void readCommandLineArguements(String [] args){
+		serverIP = args[0];
+		serverPort = Integer.parseInt(args[1]);
+		teamName = args[2];
+	}
+
+	// Initialize all global variables
+	public static void initializeGlobalVariables(){
+		sourceLocation = serverIP + ":" + serverPort;
+        peerList = new ArrayList <String>();
+        peersHashMap = new HashMap<String, String>();
+		numOfSource = 0;
+		totalPeers = 0;
+		peers = "";
+	}
+    public static void main(String[] args) throws IOException{
+		// Initalize variables
+		readCommandLineArguements(args);
+		initializeGlobalVariables(); 
+
+		// Process requests after starting up
+		connectClient(serverIP,serverPort);
+		processRequests();
+
+		// To do: Put code for collaboration 
+		System.out.println(teamName + " - Finished with registry, starting collaboration");
+
+		// Process requests after shutting down
+		connectClient(serverIP, serverPort);
+		processRequests(); 
     }
 }
