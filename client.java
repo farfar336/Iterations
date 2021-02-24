@@ -1,12 +1,12 @@
 /*
 To do: 
 	Document the following, specified by the TA:
-		-state briefly that functional programming is the approach at play here [Farrukh]
-		-break down the general flow and structure of your script/program [Farrukh]
+		-state briefly that functional programming is the approach at play here [Farrukh] (done)
+		-break down the general flow and structure of your script/program [Farrukh] (done)
 		-Mention key classnames, function names, design patterns used, etc... Try to form somewhat of a cohesive narrative in this section, so it reads like a passage from your favorite novel.  [Farrukh]
 
 	Code requirements:
-		-Location Request [Farrukh]
+		-Location Request [Farrukh] (done)
 		-Updated Report Request [Farrukh]
 		-Group management requirements (peer UDP/IP messages) [Xudong]
 		-User interface and snippets requirements (snip UDP/IP messages) [Xudong]
@@ -18,6 +18,32 @@ To do:
 		of your video should be between 2 and 7 minutes. Only the first 7 minutes of your video will be viewed
 		when grading. Use the same D2L dropbox to either upload the video or provide a link to your video. [Farrukh]
 		-Running your peer on Friday Feb 26 between 1pm and 2pm. [Farrukh] [Xudong]
+*/
+
+/*
+ 	Code documentation
+	-Functional programming is used
+	-General flow of code: Command line arguements are read to initalize variables. Then it connects the client to the registry 
+	and starts processing requests. After all requests are complete, the connection is closed. Then the collaboration part is 
+	started, where each peer keeps track of other peers by sending messages to each other. Additionally, a GUI is visible for 
+	adding snippets of text to the system. Lamports logical clock ensures that the time stamps fulfill the happens-before order. 
+	When the system is shutting down, it will send a message to all peers and terminate them. Finally, the registry is connected 
+	again to process requests. After the requests are complete, the system stops.
+	-Key functions: 
+		-readCommandLineArguements: Read command line arguments
+		-initializeGlobalVariables: Initialize all global variables
+		-connectClient: Connect client to server
+		-processRequests: Process requests from the server
+		-teamNameRequest: Sends the team name to the server
+		-codeRequest: Sends the code to the server
+		-peersRequest: Receives and stores peers
+		-reportRequest: Gets report about peers and sends it to the server
+		-locationRequest: Sends the location to the server
+		-storePeers: Stores peers
+		-getPeerInfo: Gets info about peers and returns info in string format
+		-getPeers: Gets a list of peers and returns it in string format
+		-sendToServer: Sends the string to the server
+		-To do: Mention more more from Xudong's code
 */
 
 // Importing libraries
@@ -215,7 +241,7 @@ public class client{
 	}
 
 	// To do: Update report request
-	//Gets report about peers and sends it to the server
+	// Gets report about peers and sends it to the server
 	public static void reportRequest(Socket clientSocket) throws IOException {
 		System.out.println(teamName + " - Received get report request");
 
@@ -228,7 +254,7 @@ public class client{
 		System.out.println(teamName + " - Finished request");
 	}
 	
-	// Store peers 
+	// Stores peers 
 	public static void storePeers(int num, BufferedReader reader) throws NumberFormatException, IOException {
 		long time = new Timestamp(System.currentTimeMillis()).getTime();
 		
@@ -264,7 +290,7 @@ public class client{
 		System.out.println(teamName + " - Finished request");
 	}
 
-	// Sends the team name to the server
+	// Sends the location to the server
 	public static void locationRequest(Socket clientSocket) throws IOException {
 		System.out.println(teamName + " - Received get location request");
 
@@ -307,7 +333,7 @@ public class client{
         reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream())); 
 	}
 
-	// Read command line arguements
+	// Read command line arguments
 	public static void readCommandLineArguements(String [] args){
 		serverIP = args[0];
 		serverPort = Integer.parseInt(args[1]);
@@ -323,6 +349,7 @@ public class client{
 		totalPeers = 0;
 		peers = "";
 	}
+
     public static void main(String[] args) throws IOException{
 		// Initalize variables
 		readCommandLineArguements(args);
