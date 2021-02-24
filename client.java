@@ -189,6 +189,7 @@ public class client{
 		return peerInfo;
 	}
 
+	// To do: Update report request
 	//Gets report about peers and sends it to the server
 	public static void reportRequest(Socket clientSocket) throws IOException {
 		System.out.println(teamName + " - Received get report request");
@@ -244,9 +245,9 @@ public class client{
 	public static void locationRequest(Socket clientSocket) throws IOException {
 		System.out.println(teamName + " - Received get location request");
 
-		String toServer = sourceLocation;
+		String toServer = sourceLocation + "\n";
 
-		System.out.println("I'm at location: " + toServer);
+		System.out.println("I'm at location: " + sourceLocation);
 		sendToServer(toServer, clientSocket);
 		System.out.println(teamName + " - Finished request");
 	}

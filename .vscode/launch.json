@@ -6,39 +6,28 @@
     "configurations": [
         {
             "type": "java",
-            "name": "Launch Registry",
-            "request": "launch",
-            "mainClass": "registry.Registry",
-            "projectName": "Iterations_f58fcc6b"
-        },
-        {
-            "type": "java",
             "name": "Launch Current File",
             "request": "launch",
             "mainClass": "${file}"
         },
         {
             "type": "java",
-            "name": "Launch Registry",
+            "name": "Launch client",
             "request": "launch",
-            "mainClass": "Registry",
-            "projectName": "Iterations_f58fcc6b",
+            "mainClass": "client",
+            "projectName": "Iterations_3465a5b",
             "args": [
-                "192.168.1.64",
-                "55921"
+                "192.168.1.65",
+                "55901",
+                "Xudong Farrukh"
             ]
         },
         {
             "type": "java",
-            "name": "Launch client",
+            "name": "Launch Registry",
             "request": "launch",
-            "mainClass": "client",
-            "projectName": "Iterations_f58fcc6b",
-            "args": [
-                "192.168.1.64",
-                "55901",
-                "Xudong Farrukh"
-            ]
+            "mainClass": "registry.Registry",
+            "projectName": "Iterations_3465a5b"
         }
     ]
 }
