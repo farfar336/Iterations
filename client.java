@@ -12,6 +12,11 @@ import java.net.*;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import javax.swing.JOptionPane;
 
 import interation2.Peer;
 public class client{
@@ -31,7 +36,8 @@ public class client{
 	public static int UDPport;
 	public static String snips;
 	public static long startsnip;
-	Thread mythread;
+	static Thread mythread;
+	public static Boolean stop=false;
 	
 	
 	// Sends the string to the server
@@ -258,7 +264,7 @@ public class client{
 	public static void locationRequest(Socket clientSocket) throws IOException {
 		System.out.println(teamName + " - Received get location request");
 
-		String toServer = sourceLocation + "\n";
+		String toServer = "localhost:" +peer.getPort() + "\n";
 
 		System.out.println("I'm at location: " + peer.getPort());
 		sendToServer(toServer, clientSocket);
@@ -305,20 +311,13 @@ public class client{
 	}
 
 	// Initialize all global variables
-	public static void initializeGlobalVariables(){
+	public static void initializeGlobalVariables() throws SocketException{
 		sourceLocation = serverIP + ":" + serverPort;
         peerList = new ArrayList <String>();
         peersHashMap = new HashMap<String, String>();
 		numOfSource = 0;
 		totalPeers = 0;
 		peers = "";
-	}
-
-
-    public static void main(String[] args) throws IOException, InterruptedException{
-		// Initalize variables
-		readCommandLineArguements(args);
-		initializeGlobalVariables();
 		peer=new Peer();
 		peer.setUpUDPserver();
 		Runnable task1=() -> { try {
@@ -329,10 +328,113 @@ public class client{
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}};
+		}};	
+		Thread mythread=new Thread(task1);	
+	}
+	public static void UDPreceiveMessage() throws IOException {
+		String message=peer.receiveMessage();
+		System.out.println("receive message"+message);
+
+		if(message.equals("stop")) {
+			peer.sendInfo("stop");
+			stop=true;
+			peer.setStop();
+		}
+		else if(message.startsWith("snip")) {
+			snips=message;
+
+			}
+		else if(message.startsWith("peer")){
+			String newPeer=message.replace("peer", "");
+			if(!peerList.contains(newPeer)) {
+				peerList.add(newPeer);
+			}
+			
+			
+			peer.setPeerList(peerList);
+		}
+		message=null;
+	
+	
+}
+
+public static void sendPeer() throws InterruptedException {
+				if(peerList.size()>0) {
+					for(int i=0;i<peerList.size();i++) {
+						InetAddress ip;
+						System.out.println(peerList.get(i));
+						try {
+							ip = InetAddress.getByName(peerList.get(i).split(":")[0].toString().replace("/", ""));
+							int port=Integer.parseInt(peerList.get(i).split(":")[1]);
+							String message="peer"+peer.getAddress()+":"+peer.getPort();
+							peer.sendMessage(message.replace("/", ""), ip, port);
+						} catch (UnknownHostException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}				
+					}
+				}		
+			
+}
+
+	static Thread t1=new Thread (new Runnable() {
+		public void run() {
+			while(!stop) {
+				try {
+					
+					sendPeer();
+					Thread.sleep(15000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			
+			
+		}
 		
+	});
+
+	static Thread t = new Thread(new Runnable() {
+		@Override
+		public void run() {
+			Scanner keyboard = new Scanner(System.in);
+			while(!stop) {
+				String input = keyboard.nextLine();
+				if(input!=null) {
+					Thread.currentThread().interrupt();
+				}
+				try {
+					if(startsnip==0) {
+						startsnip=new Timestamp(System.currentTimeMillis()).getTime();
+					}
+					long currenttime=new Timestamp(System.currentTimeMillis()).getTime();
+					long timestamp=currenttime-startsnip;
+					String snip="snip"+timestamp+" "+input+" "+peer.getAddress()+":"+peer.getPort();
+					if(snips!=null) {
+						snips+=snip+"\n";
+					}else {
+						snips=snip+"\n";
+					}
+					peer.sendInfo(snips);
+					
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
 		
-		Thread mythread=new Thread(task1);
+	});
+
+
+    public static void main(String[] args) throws IOException, InterruptedException{
+		// Initalize variables
+		readCommandLineArguements(args);
+		initializeGlobalVariables();
 		
 		// Process requests after starting up
 		connectClient(serverIP,serverPort);
@@ -341,8 +443,29 @@ public class client{
 		peer.setPeerList(peerList);
 		// To do: Put code for collaboration 
 		System.out.println(teamName + " - Finished with registry, starting collaboration");
-		mythread.run();
-	
+		//mythread.run();
+		Executor executor = Executors.newSingleThreadExecutor();
+		executor.execute(t);
+		Executor executor2 = Executors.newSingleThreadExecutor();
+		//executor.execute(t1);
+		executor2.execute(t1);
+		while(!stop) {
+		
+			try {
+				UDPreceiveMessage();
+			} catch (SocketTimeoutException e) {
+				// TODO Auto-generated catch block
+				System.out.println("did not receive message");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			if(stop) {
+				stop=true;
+				break;
+			}
+		}
 
 		// Process requests after shutting down
 		connectClient(serverIP, serverPort);

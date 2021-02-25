@@ -5,6 +5,8 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+import javax.swing.JOptionPane;
+
 public class Peer  {
 	public byte[] inbuf = new byte[256];
 	public byte[] outbuf = new byte[256];
@@ -46,23 +48,23 @@ public class Peer  {
 		UDPserver.send(UDPoutPacket);
 	}
 	
-	public void stop() {
-		System.out.println("stop UDP");
-		UDPserver.close();
-	}
 	public void setPeerList(ArrayList<String> newPeerList) {
 		peerList=newPeerList;
 	}
 	public void setStop() {
-		Thread.currentThread().interrupt();
+		System.out.println("stop UDP");
 		stop=true;
+		UDPserver.close();
 	}
 	public void sendInfo(String message) throws IOException {
 		for(int i=0;i<peerList.size();i++) {
-			InetAddress ip=InetAddress.getByName(peerList.get(i).split(":")[0]);
+			InetAddress ip=InetAddress.getByName(peerList.get(i).split(":")[0].toString().replace("/", ""));
 			int port=Integer.parseInt(peerList.get(i).split(":")[1]);
 			sendMessage(message, ip, port);
 		}
+	}
+	public void clearBuff() {
+		inbuf=new byte[256];
 	}
 public void UDPreceiveMessage() throws IOException {
 			message=receiveMessage();
@@ -73,7 +75,7 @@ public void UDPreceiveMessage() throws IOException {
 			if(message.equals("stop")) {
 				sendInfo("stop");
 				setStop();
-				stop();
+				
 			}
 			else if(message.startsWith("snip")) {
 				snips=message;
@@ -110,46 +112,14 @@ public void UDPreceiveMessage() throws IOException {
 					
 				}
 			}
-			
-		
-	}
-	public void getsnip() throws IOException {
-		if(startSnip==0) {
-			startSnip=new Timestamp(System.currentTimeMillis()).getTime();
-		}
-		Scanner keyboard = new Scanner(System.in);
-		String command = keyboard.nextLine();
-		long currenttime=new Timestamp(System.currentTimeMillis()).getTime();
-		long timestamp=currenttime-startSnip;
-		String snip="snip"+timestamp+" "+command+" "+getAddress()+":"+getPort();
-		if(snips!=null) {
-			snips+=snip+"\n";
-		}else {
-			snips=snip;
-		}
-		sendInfo(snips);
 	}
 
+
 	public void thread1() throws IOException, InterruptedException  {
-		// TODO Auto-generated method stub
-		while(!stop) {
 			
-				try {
-					UDPreceiveMessage();
-				} catch (SocketTimeoutException e) {
-					// TODO Auto-generated catch block
-					System.out.println("did not receive message");
-				}
-			
-			if(stop) {
-				Thread.currentThread().interrupt();
-			}
-			sendPeer();
-			
-			
-			
-			
-		}
+		
+				
+		
 		
 		
 	}
