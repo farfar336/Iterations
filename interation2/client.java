@@ -1,3 +1,4 @@
+package interation2;
 /*
 To do: 
 	Document the following, specified by the TA:
@@ -8,6 +9,7 @@ To do:
 	Code requirements:
 		-Location Request [Farrukh] (done)
 		-Updated Report Request [Farrukh]
+		-Update source code variable [Farrukh]
 		-Group management requirements (peer UDP/IP messages) [Xudong]
 		-User interface and snippets requirements (snip UDP/IP messages) [Xudong]
 		-Shutting down system requirements (stop UDP/IP messages) [Xudong]
@@ -62,10 +64,10 @@ public class client{
 	public static String serverIP;
 	public static int serverPort;
 	public static String sourceLocation;
-	public static int numOfSource;
+	public static int numberOfSources;
 	public static int totalPeers;
-	public static String peers;
-	public static ArrayList<String> peerList;
+	public static ArrayList<String> peerListRegistry;
+	public static ArrayList<String> currentPeerList;
 	public static HashMap<String, String> peersHashMap;
 	public static Socket clientSocket;
 	public static BufferedReader reader;
@@ -105,10 +107,10 @@ public class client{
 				"	public static String codeResponse=\"Java\\n\";\r\n" + 
 				"	public static int totalPeers=0;\r\n" + 
 				"	public static String peers=\"\";\r\n" + 
-				"	public static ArrayList<String> peerList;\r\n" + 
+				"	public static ArrayList<String> peerListRegistry;\r\n" + 
 				"	public static String date=\"\";\r\n" + 
 				"	public static String command=null;\r\n" + 
-				"	public static int numOfSource=0;\r\n" + 
+				"	public static int numberOfSources=0;\r\n" + 
 				"	public static String sourceLocation;\r\n" + 
 				"	public static int port;\r\n" + 
 				"	public static String ip;\r\n" + 
@@ -131,10 +133,10 @@ public class client{
 				"	//send the report to server\r\n" + 
 				"	public static void getReport(Socket clientSocket) throws IOException {\r\n" + 
 				"		peers=\"\";\r\n" + 
-				"		for (int i=0;i<peerList.size();i++) {\r\n" + 
-				"			peers+=peerList.get(i)+\"\\n\";\r\n" + 
+				"		for (int i=0;i<peerListRegistry.size();i++) {\r\n" + 
+				"			peers+=peerListRegistry.get(i)+\"\\n\";\r\n" + 
 				"		}\r\n" + 
-				"		String toServer=totalPeers+\"\\n\"+peers+numOfSource+\"\\n\";;\r\n" + 
+				"		String toServer=totalPeers+\"\\n\"+peers+numberOfSources+\"\\n\";;\r\n" + 
 				"		for(Map.Entry<String, String> entry : peersHashMap.entrySet()) {\r\n" + 
 				"		    String key = entry.getKey().split(\"\\n\")[0];\r\n" + 
 				"		    Date getDate  =new Date( Long.parseLong(entry.getKey().split(\"\\n\")[1]));\r\n" + 
@@ -155,7 +157,7 @@ public class client{
 				"		System.out.println(date);\r\n" + 
 				"		int num=Integer.parseInt(reader.readLine());\r\n" + 
 				"		if(num>0) {\r\n" + 
-				"			numOfSource+=1;\r\n" + 
+				"			numberOfSources+=1;\r\n" + 
 				"		}\r\n" + 
 				"		totalPeers+=num;\r\n" + 
 				"		System.out.println(\"num of peers :\"+num+\"\\n\");\r\n" + 
@@ -163,8 +165,8 @@ public class client{
 				"			peers=\"\";\r\n" + 
 				"			for(int i=0;i<num;i++) {\r\n" + 
 				"				String peer=reader.readLine();		\r\n" + 
-				"				if(!peerList.contains(peer)) {\r\n" + 
-				"					peerList.add(peer);\r\n" + 
+				"				if(!peerListRegistry.contains(peer)) {\r\n" + 
+				"					peerListRegistry.add(peer);\r\n" + 
 				"				}else {\r\n" + 
 				"					totalPeers-=1;\r\n" + 
 				"				}\r\n" + 
@@ -182,7 +184,7 @@ public class client{
 				"    	port=Integer.parseInt(args[1]);\r\n" + 
 				"    	sourceLocation=ip+\":\"+port;\r\n" + 
 				"        Socket clientSocket=new Socket(ip,port);\r\n" + 
-				"        peerList =new ArrayList<String>();\r\n" + 
+				"        peerListRegistry =new ArrayList<String>();\r\n" + 
 				"        peersHashMap=new HashMap<String, String>();\r\n" + 
 				"        BufferedReader reader=new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));\r\n" + 
 				"        while (!(command=reader.readLine()).startsWith(\"close\")) {\r\n" + 
@@ -216,14 +218,21 @@ public class client{
 	}
 	
 	// Gets a list of peers and returns it in string format
-	public static String getPeers(){
-		peers = "";
-		for (int i=0;i<peerList.size();i++) {
-			peers+=peerList.get(i)+"\n";
+	public static String peersToString(ArrayList<String> peersArray){
+		String peers = "";
+		for (int i=0;i<peersArray.size();i++) {
+			if (i == 0){ //Don't add \n to the first entry
+				peers+=peersArray.get(i); 
+			}
+			else{ //Add to the other entries
+				peers+="\n" + peersArray.get(i);
+			}
+	
 		}
 		return peers;
 	}
 
+	// To do: Decide if want to remove this
 	// Gets info about peers and returns info in string format
 	public static String getPeerInfo(){
 		String peerInfo = "";
@@ -240,14 +249,45 @@ public class client{
 		return peerInfo;
 	}
 
-	// To do: Update report request
+	public static String getReport(){
+		// Prepare variables
+		int totalPeersFromRegistry = peerListRegistry.size();
+		String peersFromRegistry = peersToString(peerListRegistry);
+		Date aDate = new Date();
+		String reportDateReceived = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(aDate);
+		int totalcurrentPeers = currentPeerList.size(); 
+		String currentPeerListString = peersToString(currentPeerList);
+		int numberOfUDPsReceived = 99; //To do: Use actual variable
+		String UDPMessagesReceived = "136.159.5.25:64057 136.159.5.25:64057 2020-11-30 12:49:25" +"\n" + "136.159.5.25:64057 136.159.5.25:64057 2020-11-30 12:49:35"; //To do: Use actual variable
+		int numberOfUDPsSent = 99; //To do: Use actual variable
+		String UDPMessagesSent = "136.159.5.25:64057 136.159.5.25:64057 2020-11-30 12:49:25" + "\n" + "136.159.5.25:64057 136.159.5.25:64057 2020-11-30 12:49:35"; //To do: Use actual variable
+		int numberOfSnippets = 99; //To do: Use actual variable
+		String snippetContents = "3 test0 test message 1 136.159.5.25:61162" + "\n" + "4 my test 136.159.5.25:64057" + "\n" + "9 test1 test message 1 136.159.5.25:28345"; //To do: Use actual variable
+
+		// Format report
+		String report = 
+		totalPeersFromRegistry + "\n" + // To do: Check this is correct with multiple peers
+		peersFromRegistry + "\n" +  // To do: Check this is correct with multiple peers
+		numberOfSources + "\n" + 
+		sourceLocation + "\n" + 
+		reportDateReceived + "\n" +
+		totalcurrentPeers + "\n" + // To do: Check this is correct with multiple peers
+		currentPeerListString + "\n" + // To do: Check this is correct with multiple peers
+		numberOfUDPsReceived + "\n" +
+		UDPMessagesReceived + "\n" +
+		numberOfUDPsSent + "\n" +
+		UDPMessagesSent + "\n" +
+		numberOfSnippets + "\n" +
+		snippetContents + "\n";
+
+		System.out.println("report \n" + report);
+		// report += getPeerInfo();
+		return report;
+	}
+
 	// Gets report about peers and sends it to the server
 	public static void reportRequest(Socket clientSocket) throws IOException {
 		System.out.println(teamName + " - Received get report request");
-
-		peers = getPeers();
-		String toServer = totalPeers + "\n" + peers + numOfSource + "\n";
-		toServer += getPeerInfo();
 
 		System.out.println(teamName + " - about to send report");
 		sendToServer(toServer, clientSocket);
@@ -258,17 +298,18 @@ public class client{
 	public static void storePeers(int num, BufferedReader reader) throws NumberFormatException, IOException {
 		long time = new Timestamp(System.currentTimeMillis()).getTime();
 		
-		peers = "";
+		String peers = "";
 		for(int i = 0; i < num; i ++) {
 			String peer = reader.readLine();		
-			if(!peerList.contains(peer)) {
-				peerList.add(peer);
+			if(!currentPeerList.contains(peer)) {
+				currentPeerList.add(peer);
 			}else {
 				totalPeers -= 1;
 			}
 			peers += peer;
 			peers += "\n";
 		}
+
 		String sourceAndTime = sourceLocation + "\n" + time;
 		peersHashMap.put(sourceAndTime, peers);
 	}
@@ -279,7 +320,7 @@ public class client{
 		
 		int numOfPeersReceived = Integer.parseInt(reader.readLine());
 		if(numOfPeersReceived > 0) {
-			numOfSource += 1;
+			numberOfSources += 1;
 		}
 		totalPeers += numOfPeersReceived;
 
@@ -287,6 +328,8 @@ public class client{
 			storePeers(numOfPeersReceived, reader);
 		}
 
+		peerListRegistry = currentPeerList;
+		String toServer = getReport() + "\n"; //To do: Remove
 		System.out.println(teamName + " - Finished request");
 	}
 
@@ -343,11 +386,10 @@ public class client{
 	// Initialize all global variables
 	public static void initializeGlobalVariables(){
 		sourceLocation = serverIP + ":" + serverPort;
-        peerList = new ArrayList <String>();
+		numberOfSources = 0;
+        peerListRegistry = new ArrayList <String>();
+		currentPeerList = new ArrayList <String>();
         peersHashMap = new HashMap<String, String>();
-		numOfSource = 0;
-		totalPeers = 0;
-		peers = "";
 	}
     public static void main(String[] args) throws IOException{
 		// Initalize variables
@@ -362,7 +404,8 @@ public class client{
 		System.out.println(teamName + " - Finished with registry, starting collaboration");
 
 		// Process requests after shutting down
-		connectClient(serverIP, serverPort);
-		processRequests(); 
+		// connectClient(serverIP, serverPort);
+		// processRequests(); 
+		System.out.println("Get report request will print this: \n" + getReport()); //To do: Remove this later
     }
 }
