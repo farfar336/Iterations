@@ -361,6 +361,7 @@ public class client{
 		peers = "";
 		peer=new Peer();
 		peer.setUpUDPserver();
+
 		Runnable task1=() -> { try {
 			peer.thread1();
 		} catch (InterruptedException e) {
@@ -373,8 +374,12 @@ public class client{
 		Thread mythread=new Thread(task1);	
 	}
 	public static void UDPreceiveMessage() throws IOException {
+		int lamportTimeStamp = 0; //To do: This is a temporary variable. We'll need to use an actual lamport time stamp variable
+
 		String message=peer.receiveMessage();
-		System.out.println("receive message"+message);
+		System.out.println("Peer added: "+ message); //Comment this out once User requirement is finished
+		// System.out.println(lamportTimeStamp + " "+ message); //Uncomment this once User requirement is finished
+
 
 		if(message.equals("stop")) {
 			peer.sendInfo("stop");
