@@ -1,3 +1,4 @@
+package interation2;
 /*
 To do: Document the following, specified by the TA:
 	-state briefly that functional programming is the approach at play here
@@ -7,14 +8,12 @@ To do: Document the following, specified by the TA:
 
 // Importing libraries
 import java.io.*;
-import java.net.Socket;
+import java.net.*;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
+import interation2.Peer;
 public class client{
 	// Global variables
 	public static String teamName;
@@ -28,7 +27,13 @@ public class client{
 	public static HashMap<String, String> peersHashMap;
 	public static Socket clientSocket;
 	public static BufferedReader reader;
-
+	public static Peer peer;
+	public static int UDPport;
+	public static String snips;
+	public static long startsnip;
+	Thread mythread;
+	
+	
 	// Sends the string to the server
 	public static void sendToServer(String toServer, Socket clientSocket) throws IOException {
 		clientSocket.getOutputStream().write(toServer.getBytes());
@@ -37,7 +42,6 @@ public class client{
 	// Sends the team name to the server
 	public static void teamNameRequest(Socket clientSocket) throws IOException {
 		String toServer = teamName + "\n";
-
 		System.out.println(teamName + " - Received get team name request");
 		System.out.println(teamName + " - about to send team name ");
 		sendToServer(toServer, clientSocket);
@@ -228,6 +232,7 @@ public class client{
 			peers += peer;
 			peers += "\n";
 		}
+		peer.setPeerList(peerList);
 		String sourceAndTime = sourceLocation + "\n" + time;
 		peersHashMap.put(sourceAndTime, peers);
 	}
@@ -255,7 +260,7 @@ public class client{
 
 		String toServer = sourceLocation + "\n";
 
-		System.out.println("I'm at location: " + sourceLocation);
+		System.out.println("I'm at location: " + peer.getPort());
 		sendToServer(toServer, clientSocket);
 		System.out.println(teamName + " - Finished request");
 	}
@@ -308,20 +313,40 @@ public class client{
 		totalPeers = 0;
 		peers = "";
 	}
-    public static void main(String[] args) throws IOException{
+
+
+    public static void main(String[] args) throws IOException, InterruptedException{
 		// Initalize variables
 		readCommandLineArguements(args);
-		initializeGlobalVariables(); 
-
+		initializeGlobalVariables();
+		peer=new Peer();
+		peer.setUpUDPserver();
+		Runnable task1=() -> { try {
+			peer.thread1();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}};
+		
+		
+		Thread mythread=new Thread(task1);
+		
 		// Process requests after starting up
 		connectClient(serverIP,serverPort);
+		
 		processRequests();
-
+		peer.setPeerList(peerList);
 		// To do: Put code for collaboration 
 		System.out.println(teamName + " - Finished with registry, starting collaboration");
+		mythread.run();
+	
 
 		// Process requests after shutting down
 		connectClient(serverIP, serverPort);
 		processRequests(); 
+		
     }
 }
