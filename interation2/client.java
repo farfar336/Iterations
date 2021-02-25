@@ -290,6 +290,7 @@ public class client{
 		System.out.println(teamName + " - Received get report request");
 
 		System.out.println(teamName + " - about to send report");
+		String toServer = getReport() + "\n";
 		sendToServer(toServer, clientSocket);
 		System.out.println(teamName + " - Finished request");
 	}
@@ -329,7 +330,6 @@ public class client{
 		}
 
 		peerListRegistry = currentPeerList;
-		String toServer = getReport() + "\n"; //To do: Remove
 		System.out.println(teamName + " - Finished request");
 	}
 
