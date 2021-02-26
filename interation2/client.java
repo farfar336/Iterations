@@ -257,19 +257,19 @@ public class client{
 		String reportDateReceived = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(aDate);
 		int totalcurrentPeers = currentPeerList.size(); 
 		String currentPeerListString = peersToString(currentPeerList);
-		int numberOfUDPsReceived = 99; //To do: Use actual variable
-		String UDPMessagesReceived = "136.159.5.25:64057 136.159.5.25:64057 2020-11-30 12:49:25" +"\n" + "136.159.5.25:64057 136.159.5.25:64057 2020-11-30 12:49:35"; //To do: Use actual variable
-		int numberOfUDPsSent = 99; //To do: Use actual variable
-		String UDPMessagesSent = "136.159.5.25:64057 136.159.5.25:64057 2020-11-30 12:49:25" + "\n" + "136.159.5.25:64057 136.159.5.25:64057 2020-11-30 12:49:35"; //To do: Use actual variable
-		int numberOfSnippets = 99; //To do: Use actual variable
-		String snippetContents = "3 test0 test message 1 136.159.5.25:61162" + "\n" + "4 my test 136.159.5.25:64057" + "\n" + "9 test1 test message 1 136.159.5.25:28345"; //To do: Use actual variable
+		int numberOfUDPsReceived = 99999; //To do: Use actual variable
+		String UDPMessagesReceived = "To do: UDPMessagesReceived"; //To do: Use actual variable
+		int numberOfUDPsSent = 99999; //To do: Use actual variable
+		String UDPMessagesSent = "To do: UDPMessagesSent"; //To do: Use actual variable
+		int numberOfSnippets = 99999; //To do: Use actual variable
+		String snippetContents = "To do: snippetContents"; //To do: Use actual variable
 
 		// Format report
 		String report = 
 		totalPeersFromRegistry + "\n" + // To do: Check this is correct with multiple peers
 		peersFromRegistry + "\n" +  // To do: Check this is correct with multiple peers
 		numberOfSources + "\n" + 
-		sourceLocation + "\n" + 
+		sourceLocation + "\n" +   
 		reportDateReceived + "\n" +
 		totalcurrentPeers + "\n" + // To do: Check this is correct with multiple peers
 		currentPeerListString + "\n" + // To do: Check this is correct with multiple peers
