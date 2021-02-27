@@ -1,50 +1,9 @@
 package interation2;
 /*
-To do: 
-	Document the following, specified by the TA:
-		-state briefly that functional programming is the approach at play here [Farrukh] (done)
-		-break down the general flow and structure of your script/program [Farrukh] (done)
-		-Mention key classnames, function names, design patterns used, etc... Try to form somewhat of a cohesive narrative in this section, so it reads like a passage from your favorite novel.  [Farrukh]
-
-	Code requirements:
-		-Location Request [Farrukh] (done)
-		-Updated Report Request [Farrukh]
-		-Group management requirements (peer UDP/IP messages) [Xudong]
-		-User interface and snippets requirements (snip UDP/IP messages) [Xudong]
-		-Shutting down system requirements (stop UDP/IP messages) [Xudong]
-
-	Other requirements:
-		-Class diagram of your solution to the D2L dropbox for this iteration. [Farrukh]
-		-A video that gives a brief explanation of your implementation and shows your peer in action. The length
-		of your video should be between 2 and 7 minutes. Only the first 7 minutes of your video will be viewed
-		when grading. Use the same D2L dropbox to either upload the video or provide a link to your video. [Farrukh]
-		-Running your peer on Friday Feb 26 between 1pm and 2pm. [Farrukh] [Xudong]
-*/
-
-/*
- 	Code documentation
-	-Functional programming is used
-	-General flow of code: Command line arguements are read to initalize variables. Then it connects the client to the registry 
-	and starts processing requests. After all requests are complete, the connection is closed. Then the collaboration part is 
-	started, where each peer keeps track of other peers by sending messages to each other. Additionally, a GUI is visible for 
-	adding snippets of text to the system. Lamports logical clock ensures that the time stamps fulfill the happens-before order. 
-	When the system is shutting down, it will send a message to all peers and terminate them. Finally, the registry is connected 
-	again to process requests. After the requests are complete, the system stops.
-	-Key functions: 
-		-readCommandLineArguements: Read command line arguments
-		-initializeGlobalVariables: Initialize all global variables
-		-connectClient: Connect client to server
-		-processRequests: Process requests from the server
-		-teamNameRequest: Sends the team name to the server
-		-codeRequest: Sends the code to the server
-		-peersRequest: Receives and stores peers
-		-reportRequest: Gets report about peers and sends it to the server
-		-locationRequest: Sends the location to the server
-		-storePeers: Stores peers
-		-getPeerInfo: Gets info about peers and returns info in string format
-		-getPeers: Gets a list of peers and returns it in string format
-		-sendToServer: Sends the string to the server
-		-To do: Mention more more from Xudong's code
+To do: Document the following, specified by the TA:
+	-state briefly that functional programming is the approach at play here
+	-break down the general flow and structure of your script/program
+	-Mention key classnames, function names, design patterns used, etc... Try to form somewhat of a cohesive narrative in this section, so it reads like a passage from your favorite novel. 
 */
 
 // Importing libraries
@@ -53,6 +12,7 @@ import java.net.*;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -74,11 +34,11 @@ public class client{
 	public static Socket clientSocket;
 	public static BufferedReader reader;
 	public static Peer peer;
-	public static int UDPport;
 	public static String snips;
 	public static long startsnip;
-	static Thread mythread;
-	public static Boolean stop=false;
+	public static Executor executor,executor1,executor2;
+
+	public static ConcurrentHashMap<String,Long> locationAndTime;
 	
 	
 	// Sends the string to the server
@@ -251,7 +211,7 @@ public class client{
 	}
 
 	// To do: Update report request
-	// Gets report about peers and sends it to the server
+	//Gets report about peers and sends it to the server
 	public static void reportRequest(Socket clientSocket) throws IOException {
 		System.out.println(teamName + " - Received get report request");
 
@@ -264,22 +224,23 @@ public class client{
 		System.out.println(teamName + " - Finished request");
 	}
 	
-	// Stores peers 
+	// Store peers 
 	public static void storePeers(int num, BufferedReader reader) throws NumberFormatException, IOException {
 		long time = new Timestamp(System.currentTimeMillis()).getTime();
 		
 		peers = "";
 		for(int i = 0; i < num; i ++) {
-			String peer = reader.readLine();		
-			if(!peerList.contains(peer)) {
-				peerList.add(peer);
+			String peerInList = reader.readLine();		
+			if(!peerList.contains(peerInList)) {
+				peerList.add(peerInList);
+				locationAndTime.put(peerInList.replace("/", ""), time/1000);
 			}else {
 				totalPeers -= 1;
 			}
-			peers += peer;
+			peer.addActivePeer(peerInList);
+			peers += peerInList;
 			peers += "\n";
 		}
-		peer.setPeerList(peerList);
 		String sourceAndTime = sourceLocation + "\n" + time;
 		peersHashMap.put(sourceAndTime, peers);
 	}
@@ -305,7 +266,7 @@ public class client{
 	public static void locationRequest(Socket clientSocket) throws IOException {
 		System.out.println(teamName + " - Received get location request");
 
-		String toServer = "localhost:" +peer.getPort() + "\n";
+		String toServer = InetAddress.getLocalHost().toString().split("/")[1]+":" +peer.getPort() + "\n";
 
 		System.out.println("I'm at location: " + peer.getPort());
 		sendToServer(toServer, clientSocket);
@@ -361,50 +322,14 @@ public class client{
 		peers = "";
 		peer=new Peer();
 		peer.setUpUDPserver();
-
-		Runnable task1=() -> { try {
-			peer.thread1();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}};	
-		Thread mythread=new Thread(task1);	
+		locationAndTime =new ConcurrentHashMap<String,Long>();
+		executor = Executors.newSingleThreadExecutor();
+		executor1 = Executors.newSingleThreadExecutor();
+		executor2 = Executors.newSingleThreadExecutor();
 	}
-	public static void UDPreceiveMessage() throws IOException {
-		int lamportTimeStamp = 0; //To do: This is a temporary variable. We'll need to use an actual lamport time stamp variable
-
-		String message=peer.receiveMessage();
-		System.out.println("Peer added: "+ message); //Comment this out once User requirement is finished
-		// System.out.println(lamportTimeStamp + " "+ message); //Uncomment this once User requirement is finished
-
-
-		if(message.equals("stop")) {
-			peer.sendInfo("stop");
-			stop=true;
-			peer.setStop();
-		}
-		else if(message.startsWith("snip")) {
-			snips=message;
-
-			}
-		else if(message.startsWith("peer")){
-			String newPeer=message.replace("peer", "");
-			if(!peerList.contains(newPeer)) {
-				peerList.add(newPeer);
-			}
-			
-			
-			peer.setPeerList(peerList);
-		}
-		message=null;
 	
-	
-}
 
-public static void sendPeer() throws InterruptedException {
+	public static void sendPeer() throws InterruptedException {
 				if(peerList.size()>0) {
 					for(int i=0;i<peerList.size();i++) {
 						InetAddress ip;
@@ -422,33 +347,53 @@ public static void sendPeer() throws InterruptedException {
 							e.printStackTrace();
 						}				
 					}
-				}		
+				}			
+	}
+	public static Boolean notResponse(long currentTime,long time) {
+		return(currentTime-time)>30;
+	}
+	
+	public static void receiveMessage() {
+		try {
+			String newPeer=peer.getMessage();
+			if(newPeer!=null) {
+				if(!peerList.contains(newPeer)) {
+					peerList.add(newPeer);
+				}
+				long time = new Timestamp(System.currentTimeMillis()).getTime()/1000;
+				locationAndTime.put(newPeer,time);
+			}
 			
-}
+			
+			
+		} catch (SocketTimeoutException e) {
+			// TODO Auto-generated catch block
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
-	static Thread t1=new Thread (new Runnable() {
+	static Thread collaborationThread=new Thread (new Runnable() {
 		public void run() {
-			while(!stop) {
+			while(!peer.stop) {
 				try {
-					
-					sendPeer();
+					peer.sendPeer();
 					Thread.sleep(15000);
-				} catch (InterruptedException e) {
+				} catch (InterruptedException | IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
-			
-			
-		}
-		
+		}	
 	});
 
-	static Thread t = new Thread(new Runnable() {
+	static Thread getSnipThread = new Thread(new Runnable() {
 		@Override
 		public void run() {
 			Scanner keyboard = new Scanner(System.in);
-			while(!stop) {
+			while(!peer.stop) {
 				String input = keyboard.nextLine();
 				if(input!=null) {
 					Thread.currentThread().interrupt();
@@ -459,7 +404,7 @@ public static void sendPeer() throws InterruptedException {
 					}
 					long currenttime=new Timestamp(System.currentTimeMillis()).getTime();
 					long timestamp=currenttime-startsnip;
-					String snip="snip"+timestamp+" "+input+" "+peer.getAddress()+":"+peer.getPort();
+					String snip="snip"+timestamp+" "+input+" "+peer.getAddress().toString().replace("/", "")+":"+peer.getPort();
 					if(snips!=null) {
 						snips+=snip+"\n";
 					}else {
@@ -475,42 +420,44 @@ public static void sendPeer() throws InterruptedException {
 		}
 		
 	});
+	
+	static Thread checkActivePeerThread=new Thread(new Runnable() {
+		@Override
+		public void run() {
+			while(!peer.stop) {
+				long currentTime = new Timestamp(System.currentTimeMillis()).getTime()/1000;
+				for(Map.Entry<String, Long> entry : locationAndTime.entrySet()) {
+				    String location = entry.getKey();
+				    long time = entry.getValue();
+				    if(notResponse(currentTime,time)) {
+				    	//did not update after deleting
+				    	System.out.println(location+"    disconnected" );
+				    	peer.removePeerFromActivePeerList(location);
+				    	locationAndTime.remove(location);
+				    	
+				    }
+				}
+			}
+			
+		}
+	});
 
 
     public static void main(String[] args) throws IOException, InterruptedException{
 		// Initalize variables
 		readCommandLineArguements(args);
 		initializeGlobalVariables();
-		
 		// Process requests after starting up
 		connectClient(serverIP,serverPort);
-		
 		processRequests();
-		peer.setPeerList(peerList);
 		// To do: Put code for collaboration 
 		System.out.println(teamName + " - Finished with registry, starting collaboration");
-		//mythread.run();
-		Executor executor = Executors.newSingleThreadExecutor();
-		executor.execute(t);
-		Executor executor2 = Executors.newSingleThreadExecutor();
-		//executor.execute(t1);
-		executor2.execute(t1);
-		while(!stop) {
+		executor1.execute(collaborationThread);
+		executor.execute(getSnipThread);
+		executor2.execute(checkActivePeerThread);
 		
-			try {
-				UDPreceiveMessage();
-			} catch (SocketTimeoutException e) {
-				// TODO Auto-generated catch block
-				System.out.println("did not receive message");
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			if(stop) {
-				stop=true;
-				break;
-			}
+		while(!peer.stop) {
+			receiveMessage();
 		}
 
 		// Process requests after shutting down
