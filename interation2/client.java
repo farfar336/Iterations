@@ -38,6 +38,7 @@ public class client{
 	public static int nextSnipTimestamp;
 	public static Executor executor,executor1,executor2;
 	public static final int inactiveTimeLimit=240;
+	public static final int limitNumOfSnip=25;
 
 	public static ConcurrentHashMap<String,Long> locationAndTime;
 	
@@ -398,7 +399,7 @@ public class client{
 		public void run() {
 			Scanner keyboard = new Scanner(System.in);
 			while(!peer.stop) {
-				String input = keyboard.nextLine();
+				String input = keyboard.nextLine().substring(0, limitNumOfSnip);
 				try {
 					String snip=nextSnipTimestamp+" "+input+" "+peer.getAddress().toString().replace("/", "")+":"+peer.getPort();
 					if(snips!=null) {
