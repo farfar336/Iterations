@@ -9,8 +9,8 @@ import java.util.Scanner;
 
 
 public class Peer  {
-	public byte[] inbuf = new byte[256];
-	public byte[] outbuf = new byte[256];
+	public byte[] inbuf = new byte[10000];
+	public byte[] outbuf = new byte[10000];
 	public ArrayList<String> activePeerList=new ArrayList<String>();
 	public DatagramPacket UDPinPacket=new DatagramPacket(inbuf,inbuf.length);
 	public DatagramPacket UDPoutPacket;
