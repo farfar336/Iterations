@@ -42,7 +42,6 @@ To do:
 		-reportRequest: Gets report about peers and sends it to the server
 		-locationRequest: Sends the location to the server
 		-storePeers: Stores peers
-		-getPeerInfo: Gets info about peers and returns info in string format
 		-getPeers: Gets a list of peers and returns it in string format
 		-sendToServer: Sends the string to the server
 		-To do: Mention more more from Xudong's code
@@ -50,14 +49,18 @@ To do:
 
 // Importing libraries
 import java.io.*;
-import java.net.Socket;
+import java.net.*;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+import javax.swing.JOptionPane;
+
+import interation2.Peer;
 public class client{
 	// Global variables
 	public static String teamName;
@@ -71,7 +74,14 @@ public class client{
 	public static HashMap<String, String> peersHashMap;
 	public static Socket clientSocket;
 	public static BufferedReader reader;
-
+	public static Peer peer;
+	public static String snips;
+	public static int nextSnipTimestamp;
+	public static Executor executor,executor1,executor2;
+	public static final int inactiveTimeLimit=240;
+	public static final int maxSnipLength=25;
+	public static ConcurrentHashMap<String,Long> locationAndTime;
+	
 	// Sends the string to the server
 	public static void sendToServer(String toServer, Socket clientSocket) throws IOException {
 		clientSocket.getOutputStream().write(toServer.getBytes());
@@ -80,7 +90,6 @@ public class client{
 	// Sends the team name to the server
 	public static void teamNameRequest(Socket clientSocket) throws IOException {
 		String toServer = teamName + "\n";
-
 		System.out.println(teamName + " - Received get team name request");
 		System.out.println(teamName + " - about to send team name ");
 		sendToServer(toServer, clientSocket);
@@ -217,7 +226,7 @@ public class client{
 		System.out.println(teamName + " - Finished request");
 	}
 	
-	// Gets a list of peers and returns it in string format
+	// Gets a list of peers and return it in string format
 	public static String peersToString(ArrayList<String> peersArray){
 		String peers = "";
 		for (int i=0;i<peersArray.size();i++) {
@@ -227,28 +236,11 @@ public class client{
 			else{ //Add to the other entries
 				peers+="\n" + peersArray.get(i);
 			}
-	
 		}
 		return peers;
 	}
 
-	// To do: Decide if want to remove this
-	// Gets info about peers and returns info in string format
-	public static String getPeerInfo(){
-		String peerInfo = "";
-		String todaysDate;
-		for(Map.Entry<String, String> entry: peersHashMap.entrySet()) {
-		    String serverIPAndPortNumber = "Server IP and Port Number: " + entry.getKey().split("\n")[0];
-		    Date date = new Date( Long.parseLong(entry.getKey().split("\n")[1]));
-		    todaysDate = "Today's date: " + (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(date);
-		    peerInfo += serverIPAndPortNumber+"\n"+todaysDate+"\n";
-		    String peerIPAndPortNumber = "Peer IP and Port Number: " + entry.getValue();
-		    peerInfo += peerIPAndPortNumber.split("\n").length+"\n";
-		    peerInfo += peerIPAndPortNumber;  
-		}
-		return peerInfo;
-	}
-
+	// Get the report 
 	public static String getReport(){
 		// Prepare variables
 		int totalPeersFromRegistry = peerListRegistry.size();
@@ -281,11 +273,10 @@ public class client{
 		snippetContents + "\n";
 
 		System.out.println("report \n" + report);
-		// report += getPeerInfo();
 		return report;
 	}
 
-	// Gets report about peers and sends it to the server
+	//Gets report about peers and sends it to the server
 	public static void reportRequest(Socket clientSocket) throws IOException {
 		System.out.println(teamName + " - Received get report request");
 
@@ -295,24 +286,21 @@ public class client{
 		System.out.println(teamName + " - Finished request");
 	}
 	
-	// Stores peers 
+	// Store peers 
 	public static void storePeers(int num, BufferedReader reader) throws NumberFormatException, IOException {
 		long time = new Timestamp(System.currentTimeMillis()).getTime();
 		
-		String peers = "";
+		// String peers = "";
 		for(int i = 0; i < num; i ++) {
-			String peer = reader.readLine();		
-			if(!currentPeerList.contains(peer)) {
-				currentPeerList.add(peer);
+			String peerInList = reader.readLine();		
+			if(!currentPeerList.contains(peerInList)) {
+				currentPeerList.add(peerInList);
+				locationAndTime.put(peerInList.replace("/", ""), time/1000);
 			}else {
 				totalPeers -= 1;
 			}
-			peers += peer;
-			peers += "\n";
+			peer.addActivePeer(peerInList);
 		}
-
-		String sourceAndTime = sourceLocation + "\n" + time;
-		peersHashMap.put(sourceAndTime, peers);
 	}
 
 	// Receives and stores peers
@@ -333,13 +321,13 @@ public class client{
 		System.out.println(teamName + " - Finished request");
 	}
 
-	// Sends the location to the server
+	// Sends the team name to the server
 	public static void locationRequest(Socket clientSocket) throws IOException {
 		System.out.println(teamName + " - Received get location request");
 
-		String toServer = sourceLocation + "\n";
+		String toServer = InetAddress.getLocalHost().toString().split("/")[1]+":" +peer.getPort() + "\n";
 
-		System.out.println("I'm at location: " + sourceLocation);
+		System.out.println("I'm at location: " + peer.getPort());
 		sendToServer(toServer, clientSocket);
 		System.out.println(teamName + " - Finished request");
 	}
@@ -376,7 +364,7 @@ public class client{
         reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream())); 
 	}
 
-	// Read command line arguments
+	// Read command line arguements
 	public static void readCommandLineArguements(String [] args){
 		serverIP = args[0];
 		serverPort = Integer.parseInt(args[1]);
@@ -384,28 +372,154 @@ public class client{
 	}
 
 	// Initialize all global variables
-	public static void initializeGlobalVariables(){
+	public static void initializeGlobalVariables() throws SocketException{
 		sourceLocation = serverIP + ":" + serverPort;
 		numberOfSources = 0;
         peerListRegistry = new ArrayList <String>();
 		currentPeerList = new ArrayList <String>();
-        peersHashMap = new HashMap<String, String>();
+		totalPeers = 0;
+		peer = new Peer();
+		peer.setUpUDPserver();
+		locationAndTime = new ConcurrentHashMap<String,Long>();
+		executor = Executors.newSingleThreadExecutor();
+		executor1 = Executors.newSingleThreadExecutor();
+		executor2 = Executors.newSingleThreadExecutor();
+		nextSnipTimestamp = 0;
 	}
-    public static void main(String[] args) throws IOException{
+	
+	// To do: Comment on what this function does 
+	public static void sendPeer() throws InterruptedException {
+		if(currentPeerList.size()>0) {
+			for(int i = 0; i < currentPeerList.size(); i++) {
+				InetAddress ip;
+				System.out.println(currentPeerList.get(i));
+				try {
+					ip = InetAddress.getByName(currentPeerList.get(i).split(":")[0].toString().replace("/", ""));
+					int port=Integer.parseInt(currentPeerList.get(i).split(":")[1]);
+					String message="peer"+peer.getAddress()+":"+peer.getPort();
+					peer.sendMessage(message.replace("/", ""), ip, port);
+				} catch (UnknownHostException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}				
+			}
+		}			
+	}
+
+	// To do: Comment on what this function does 
+	public static Boolean notResponse(long currentTime,long time) {
+		return(currentTime-time)>inactiveTimeLimit;
+	}
+	
+	// To do: Comment on what this function does 
+	public static void receiveMessage() {
+		try {
+			String newPeer = peer.getMessage();
+			snips = peer.snips;
+			nextSnipTimestamp = peer.nextTimeStamp;
+			if(newPeer != null) {
+				if(!currentPeerList.contains(newPeer)) {
+					currentPeerList.add(newPeer);
+				}
+				long time = new Timestamp(System.currentTimeMillis()).getTime()/1000;
+				locationAndTime.put(newPeer,time);
+			}
+		} catch (SocketTimeoutException e) {
+			// TODO Auto-generated catch block
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	// To do: Comment on what this function does 
+	static Thread collaborationThread = new Thread (new Runnable() {
+		public void run() {
+			while(!peer.stop) {
+				try {
+					peer.sendPeer();
+					Thread.sleep(60000);
+				} catch (InterruptedException | IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}	
+	});
+
+	// To do: Comment on what this function does 
+	static Thread getSnipThread = new Thread(new Runnable() {
+		@Override
+		public void run() {
+			Scanner keyboard = new Scanner(System.in);
+			while(!peer.stop) {
+				
+				String input = keyboard.nextLine();
+				if(input.length() > maxSnipLength) {
+					input = input.substring(0, maxSnipLength);
+				}
+				try {
+					String snip=nextSnipTimestamp +" "+ input + " " + peer.getAddress().toString().replace("/", "") + ":" + peer.getPort();
+					if(snips != null) {
+						snips += snip+"\n";
+					}else {
+						snips = snip+"\n";
+					}
+					peer.sendInfo("snip "+ snips);
+					
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+	});
+	
+	// To do: Comment on what this function does
+	static Thread checkActivePeerThread=new Thread(new Runnable() {
+		@Override
+		public void run() {
+			while(!peer.stop) {
+				long currentTime = new Timestamp(System.currentTimeMillis()).getTime()/1000;
+				for(Map.Entry<String, Long> entry : locationAndTime.entrySet()) {
+				    String location = entry.getKey();
+				    long time = entry.getValue();
+				    if(notResponse(currentTime,time)) {
+				    	//did not update after deleting
+				    	System.out.println(location + "    disconnected" );
+				    	peer.removePeerFromActivePeerList(location);
+				    	locationAndTime.remove(location);
+				    }
+				}
+			}
+		}
+	});
+
+    public static void main(String[] args) throws IOException, InterruptedException{
 		// Initalize variables
 		readCommandLineArguements(args);
-		initializeGlobalVariables(); 
+		initializeGlobalVariables();
 
 		// Process requests after starting up
 		connectClient(serverIP,serverPort);
 		processRequests();
 
-		// To do: Put code for collaboration 
+		// Start making peers send UDP messages
 		System.out.println(teamName + " - Finished with registry, starting collaboration");
+		executor1.execute(collaborationThread);
+		executor.execute(getSnipThread);
+		executor2.execute(checkActivePeerThread);
+		
+		while(!peer.stop) {
+			receiveMessage();
+		}
 
 		// Process requests after shutting down
-		// connectClient(serverIP, serverPort);
-		// processRequests(); 
-		System.out.println("Get report request will print this: \n" + getReport()); //To do: Remove this later
+		connectClient(serverIP, serverPort);
+		processRequests(); 
     }
 }
