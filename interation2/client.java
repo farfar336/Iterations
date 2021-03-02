@@ -399,7 +399,11 @@ public class client{
 		public void run() {
 			Scanner keyboard = new Scanner(System.in);
 			while(!peer.stop) {
-				String input = keyboard.nextLine().substring(0, limitNumOfSnip);
+				
+				String input = keyboard.nextLine();
+				if(input.length()>limitNumOfSnip) {
+					input=input.substring(0, limitNumOfSnip);
+				}
 				try {
 					String snip=nextSnipTimestamp+" "+input+" "+peer.getAddress().toString().replace("/", "")+":"+peer.getPort();
 					if(snips!=null) {
