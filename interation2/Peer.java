@@ -61,6 +61,7 @@ public class Peer  {
 		UDPserver.send(UDPoutPacket);
 	}
 	
+	//add peer to active peerlist
 	public void addActivePeer(String peer) {
 		peer=peer.replace("/", "");
 		if(!activePeerList.contains(peer)) {
@@ -68,16 +69,19 @@ public class Peer  {
 		}	
 	}
 	
+	//set acctive peer list
 	public void setActivePeerList(ArrayList<String> newPeerList) {
 		activePeerList=newPeerList;
 	}
 	
+	//if we receive a stop. close the UDP
 	public void setStop() {
 		System.out.println("stop UDP");
 		stop=true;
 		UDPserver.close();
 	}
 	
+	//send info to other server
 	public void sendInfo(String message) throws IOException {
 		
 		for(int i=0;i<activePeerList.size();i++) {
@@ -87,7 +91,7 @@ public class Peer  {
 		}
 	}
 	
-	
+	//receive message , if there is any new peer, return the peer
 public String getMessage() throws IOException {
 			message=receiveMessage();
 			if(message.equals("stop")) {
@@ -110,7 +114,7 @@ public String getMessage() throws IOException {
 			}
 			return null;
 	}
-
+	//remove a peer from active peer list
 	public void removePeerFromActivePeerList(String peer) {
 		if(activePeerList.contains(peer)) {
 			activePeerList.remove(activePeerList.indexOf(peer));
@@ -118,7 +122,7 @@ public String getMessage() throws IOException {
 		
 	}
 	
-	
+	//send peer information
 	public void sendPeer() throws InterruptedException, IOException {
 			if(activePeerList.size()>0) {
 				String ip=InetAddress.getByName(InetAddress.getLocalHost().toString().split("/")[1]).toString();
