@@ -35,7 +35,7 @@ public class client{
 	public static BufferedReader reader;
 	public static Peer peer;
 	public static String snips;
-	public static long startsnip;
+	public static int nextSnipTimestamp;
 	public static Executor executor,executor1,executor2;
 
 	public static ConcurrentHashMap<String,Long> locationAndTime;
@@ -262,7 +262,7 @@ public class client{
 		System.out.println(teamName + " - Finished request");
 	}
 
-	// Sends the location to the server
+	// Sends the team name to the server
 	public static void locationRequest(Socket clientSocket) throws IOException {
 		System.out.println(teamName + " - Received get location request");
 
@@ -305,7 +305,7 @@ public class client{
         reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream())); 
 	}
 
-	// Read command line arguments
+	// Read command line arguements
 	public static void readCommandLineArguements(String [] args){
 		serverIP = args[0];
 		serverPort = Integer.parseInt(args[1]);
@@ -326,6 +326,7 @@ public class client{
 		executor = Executors.newSingleThreadExecutor();
 		executor1 = Executors.newSingleThreadExecutor();
 		executor2 = Executors.newSingleThreadExecutor();
+		nextSnipTimestamp=0;
 	}
 	
 
@@ -356,6 +357,8 @@ public class client{
 	public static void receiveMessage() {
 		try {
 			String newPeer=peer.getMessage();
+			snips=peer.snips;
+			nextSnipTimestamp=peer.nextTimeStamp;
 			if(newPeer!=null) {
 				if(!peerList.contains(newPeer)) {
 					peerList.add(newPeer);
@@ -395,22 +398,14 @@ public class client{
 			Scanner keyboard = new Scanner(System.in);
 			while(!peer.stop) {
 				String input = keyboard.nextLine();
-				if(input!=null) {
-					Thread.currentThread().interrupt();
-				}
 				try {
-					if(startsnip==0) {
-						startsnip=new Timestamp(System.currentTimeMillis()).getTime();
-					}
-					long currenttime=new Timestamp(System.currentTimeMillis()).getTime();
-					long timestamp=currenttime-startsnip;
-					String snip="snip"+timestamp+" "+input+" "+peer.getAddress().toString().replace("/", "")+":"+peer.getPort();
+					String snip=nextSnipTimestamp+" "+input+" "+peer.getAddress().toString().replace("/", "")+":"+peer.getPort();
 					if(snips!=null) {
 						snips+=snip+"\n";
 					}else {
 						snips=snip+"\n";
 					}
-					peer.sendInfo(snips);
+					peer.sendInfo("snip "+snips);
 					
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
@@ -420,6 +415,7 @@ public class client{
 		}
 		
 	});
+	
 	
 	static Thread checkActivePeerThread=new Thread(new Runnable() {
 		@Override
