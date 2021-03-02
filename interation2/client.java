@@ -37,6 +37,7 @@ public class client{
 	public static String snips;
 	public static int nextSnipTimestamp;
 	public static Executor executor,executor1,executor2;
+	public static final int inactiveTimeLimit=240;
 
 	public static ConcurrentHashMap<String,Long> locationAndTime;
 	
@@ -351,7 +352,7 @@ public class client{
 				}			
 	}
 	public static Boolean notResponse(long currentTime,long time) {
-		return(currentTime-time)>30;
+		return(currentTime-time)>inactiveTimeLimit;
 	}
 	
 	public static void receiveMessage() {
@@ -383,7 +384,7 @@ public class client{
 			while(!peer.stop) {
 				try {
 					peer.sendPeer();
-					Thread.sleep(15000);
+					Thread.sleep(60000);
 				} catch (InterruptedException | IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -415,7 +416,6 @@ public class client{
 		}
 		
 	});
-	
 	
 	static Thread checkActivePeerThread=new Thread(new Runnable() {
 		@Override
