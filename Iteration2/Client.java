@@ -45,7 +45,7 @@ To do:
 		-getPeers: Gets a list of peers and returns it in string format
 		-sendToServer: Sends the string to the server
 		-sendPeer: To do
-		-notResponse:
+		-checkTimeLimit:
 		-receiveMessage:
 		-collaborationThread:
 		-getSnipThread:
@@ -407,12 +407,9 @@ public class Client{
 		nextSnipTimestamp = 0;
 	}
 
-
-	// Detect if the time difference between current time and recorded time is greater than 240 seconds
-	//return true if time difference is greater than 240 seconds
-	//otherwise return false
-	public static Boolean notResponse(long currentTime,long time) {
-		return(currentTime-time)>inactiveTimeLimit;
+	// Check if the time difference between current time and recorded time is greater than 240 seconds
+	public static Boolean checkTimeLimit(long currentTime,long time) {
+		return(currentTime-time) > inactiveTimeLimit;
 	}
 	
 	// peer.getMessage() will return a peer's location, if any other peer send their peer info. return null if it is not peer info
@@ -420,7 +417,6 @@ public class Client{
 	// 
 	//if any peer send peer information, newPeer= this peer's location otherwise newPeer=null
 	//update the time of location in the hashmap
-
 	public static void receiveMessage() {
 		try {
 			String newPeer = peer.getMessage();
@@ -442,7 +438,7 @@ public class Client{
 		}
 	}
 
-	// a thread collaborate with other peers, send peer information to other peers
+	// A thread to collaborate with other peers and send peer information to them
 	static Thread collaborationThread = new Thread (new Runnable() {
 		public void run() {
 			while(!peer.stop) {
@@ -457,11 +453,7 @@ public class Client{
 		}	
 	});
 
-	//get input from user and modify the input, if input has more than 25 characters, get the first 25 character
-	//snip = timestamp+input+address of this peer:port of this peer
-	//add snip to snips
-	//send snips
-
+	// Get input from user and format it. If input has more than 25 characters, get the first 25 characters
 	static Thread getSnipThread = new Thread(new Runnable() {
 		@Override
 		public void run() {
@@ -491,8 +483,7 @@ public class Client{
 		}
 	});
 	
-	// check if a peer is active or not. If a peer does not send their peer info for more than 4 mins
-	// ask peer to delete this inactive peer from activePeerList
+	// Check if a peer is active or not. If a peer does not send their peer info for more than 4 mins, then remove it from the active peer list
 	static Thread checkActivePeerThread=new Thread(new Runnable() {
 		@Override
 		public void run() {
@@ -501,7 +492,7 @@ public class Client{
 				for(Map.Entry<String, Long> entry : locationAndTime.entrySet()) {
 				    String location = entry.getKey();
 				    long time = entry.getValue();
-				    if(notResponse(currentTime,time)) {
+				    if(checkTimeLimit(currentTime,time)) {
 				    	System.out.println(location + "    disconnected" );
 				    	peer.removePeerFromActivePeerList(location);
 				    	locationAndTime.remove(location);

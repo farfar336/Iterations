@@ -11,7 +11,7 @@ public class Peer {
 	public DatagramPacket UDPoutPacket;
 	public DatagramSocket UDPserver;
 	public int UDPport;
-	public Boolean stop=false;
+	public Boolean stop = false;
 	long startSnip;
 	String snips;
 	String message;
