@@ -10,9 +10,9 @@ To do:
 		-Location Request [Farrukh] (done)
 		-Updated Report Request [Farrukh]
 		-Update source code variable [Farrukh]
-		-Group management requirements (peer UDP/IP messages) [Xudong]
-		-User interface and snippets requirements (snip UDP/IP messages) [Xudong]
-		-Shutting down system requirements (stop UDP/IP messages) [Xudong]
+		-Group management requirements (peer UDP/IP messages) [Xudong] (done)
+		-User interface and snippets requirements (snip UDP/IP messages) [Xudong] (done)
+		-Shutting down system requirements (stop UDP/IP messages) [Xudong] (done)
 
 	Other requirements:
 		-Class diagram of your solution to the D2L dropbox for this iteration. [Farrukh]
@@ -55,33 +55,37 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import javax.swing.JOptionPane;
-
-import interation2.Peer;
 public class client{
 	// Global variables
+
+	// Variables related to team information
 	public static String teamName;
-	public static String serverIP;
-	public static int serverPort;
 	public static String sourceLocation;
 	public static int numberOfSources;
+
+	// Variables related to peers
 	public static int totalPeers;
 	public static ArrayList<String> peerListRegistry;
 	public static ArrayList<String> currentPeerList;
 	public static HashMap<String, String> peersHashMap;
-	public static Socket clientSocket;
-	public static BufferedReader reader;
 	public static Peer peer;
-	public static String snips;
-	public static int nextSnipTimestamp;
 	public static Executor executor,executor1,executor2;
 	public static final int inactiveTimeLimit=240;
-	public static final int maxSnipLength=25;
+
+	// Variables related to connecting client
+	public static Socket clientSocket;
+	public static BufferedReader reader;
+	public static String serverIP;
+	public static int serverPort;
+
+	// Variables related to UDP messages
+	public static String snips;
 	public static ConcurrentHashMap<String,Long> locationAndTime;
-	
+	public static int nextSnipTimestamp;
+	public static final int maxSnipLength=25;
+
 	// Sends the string to the server
 	public static void sendToServer(String toServer, Socket clientSocket) throws IOException {
 		clientSocket.getOutputStream().write(toServer.getBytes());
@@ -240,6 +244,12 @@ public class client{
 		return peers;
 	}
 
+	// Returns the number of UDP
+	public static int countLines(String str){
+		String[] lines = str.split("\r\n|\r|\n");
+		return  lines.length;
+	}
+
 	// Get the report 
 	public static String getReport(){
 		// Prepare variables
@@ -253,8 +263,8 @@ public class client{
 		String UDPMessagesReceived = "To do: UDPMessagesReceived"; //To do: Use actual variable
 		int numberOfUDPsSent = 99999; //To do: Use actual variable
 		String UDPMessagesSent = "To do: UDPMessagesSent"; //To do: Use actual variable
-		int numberOfSnippets = 99999; //To do: Use actual variable
-		String snippetContents = "To do: snippetContents"; //To do: Use actual variable
+		int numberOfSnippets = countLines(snips);
+		String snippetContents = snips; 
 
 		// Format report
 		String report = 
@@ -476,6 +486,7 @@ public class client{
 					e.printStackTrace();
 				}
 			}
+			keyboard.close();
 		}
 	});
 	
