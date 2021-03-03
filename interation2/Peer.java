@@ -55,6 +55,13 @@ public class Peer  {
 		//return InetAddress.getByName("localhost");
 		return InetAddress.getByName(InetAddress.getLocalHost().toString().split("/")[1]);
 	}
+
+	//return mylocation
+	public String getMyLocation() throws UnknownHostException {
+		String ip=getAddress().replace("/", "");
+		int port=getPort();
+		return ip+":"+port;
+	}
 	
 	//send message to other UDP server
 	public  void sendMessage(String message,InetAddress IP, int port) throws IOException {
