@@ -91,8 +91,9 @@ public class Client{
 	public static int serverPort;
 
 	// Variables related to UDP messages
-	public static String UDPMessagesSent;
-	public static String snips;
+	public static String peersReceived;
+	public static String peersSent;
+	public static String snippets;
 	public static int nextSnipTimestamp;
 	public static final int maxSnipLength=25;
 	
@@ -268,28 +269,29 @@ public class Client{
 		String peersFromRegistry = peersToString(peerListRegistry);
 		Date aDate = new Date();
 		String reportDateReceived = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(aDate);
-		int totalcurrentPeers = currentPeerList.size(); 
+		int totalCurrentPeers = currentPeerList.size(); 
 		String currentPeerListString = peersToString(currentPeerList);
-		int numberOfUDPsReceived = 99999; //To do: Use actual variable
-		String UDPMessagesReceived = "To do: UDPMessagesReceived"; //To do: Use actual variable
-		int numberOfUDPsSent = countLines(UDPMessagesSent);
-		int numberOfSnippets = countLines(snips);
+		peersReceived = "To do: peersReceived"; //To do: Use actual variable
+		int numberOfPeersReceived = countLines(peersReceived);
+		peersSent = "To do: peersSent"; //To do: Use actual variable
+		int numberOfPeersSent = countLines(peersSent);
+		int numberOfSnippets = countLines(snippets);
 
 		// Format report
 		String report = 
-		totalPeersFromRegistry + "\n" + // To do: Check this is correct with multiple peers
-		peersFromRegistry + "\n" +  // To do: Check this is correct with multiple peers
+		totalPeersFromRegistry + "\n" +
+		peersFromRegistry + "\n" +
 		numberOfSources + "\n" + 
 		sourceLocation + "\n" +   
 		reportDateReceived + "\n" +
-		totalcurrentPeers + "\n" + //
+		totalCurrentPeers + "\n" + 
 		currentPeerListString + "\n" + 
-		numberOfUDPsReceived + "\n" +
-		UDPMessagesReceived + "\n" +
-		numberOfUDPsSent + "\n" +
-		UDPMessagesSent + "\n" +
+		numberOfPeersReceived + "\n" +
+		peersReceived + "\n" +
+		numberOfPeersSent + "\n" +
+		peersSent + "\n" +
 		numberOfSnippets + "\n" +
-		snips + "\n";
+		snippets + "\n";
 
 		System.out.println("report \n" + report);
 		return report;
@@ -392,7 +394,7 @@ public class Client{
 
 	// Initialize all global variables
 	public static void initializeGlobalVariables() throws SocketException{
-		UDPMessagesSent = "";
+		peersSent = "";
 		sourceLocation = serverIP + ":" + serverPort;
 		numberOfSources = 0;
         peerListRegistry = new ArrayList <String>();
@@ -420,7 +422,7 @@ public class Client{
 	public static void receiveMessage() {
 		try {
 			String newPeer = peer.getMessage();
-			snips = peer.snips;
+			snippets = peer.snips;
 			nextSnipTimestamp = peer.nextTimeStamp;
 			if(newPeer != null) {
 				if(!currentPeerList.contains(newPeer)) {
@@ -466,13 +468,13 @@ public class Client{
 				}
 				try {
 					String snip = nextSnipTimestamp +" "+ input + " " + peer.getAddress().toString().replace("/", "") + ":" + peer.getPort();
-					UDPMessagesSent += snip + "\n";
-					if(snips != null) {
-						snips += snip + "\n";
+					// peerSent += snip + "\n";
+					if(snippets != null) {
+						snippets += snip + "\n";
 					}else {
-						snips = snip + "\n";
+						snippets = snip + "\n";
 					}
-					peer.sendInfo("snip "+ snips);
+					peer.sendInfo("snip "+ snippets);
 					
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
