@@ -1,10 +1,10 @@
-package interation2;
+package Iteration2;
 /*
 To do: 
 	Document the following, specified by the TA:
 		-state briefly that functional programming is the approach at play here [Farrukh] (done)
 		-break down the general flow and structure of your script/program [Farrukh] (done)
-		-Mention key classnames, function names, design patterns used, etc... Try to form somewhat of a cohesive narrative in this section, so it reads like a passage from your favorite novel.  [Farrukh]
+		-Mention key classnames, function names, design patterns used, etc... Try to form somewhat of a cohesive narrative in this section, so it reads like a passage from your favorite novel. [Farrukh]
 
 	Code requirements:
 		-Location Request [Farrukh] (done)
@@ -44,7 +44,12 @@ To do:
 		-storePeers: Stores peers
 		-getPeers: Gets a list of peers and returns it in string format
 		-sendToServer: Sends the string to the server
-		-To do: Mention more more from Xudong's code
+		-sendPeer: To do
+		-notResponse:
+		-receiveMessage:
+		-collaborationThread:
+		-getSnipThread:
+		-checkActivePeerThread:
 */
 
 // Importing libraries
@@ -57,7 +62,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-public class client{
+public class Client{
 	// Global variables
 
 	// Variables related to team information
@@ -81,6 +86,7 @@ public class client{
 	public static int serverPort;
 
 	// Variables related to UDP messages
+	public static String UDPMessagesSent;
 	public static String snips;
 	public static ConcurrentHashMap<String,Long> locationAndTime;
 	public static int nextSnipTimestamp;
@@ -104,7 +110,7 @@ public class client{
 	public static void codeRequest(Socket clientSocket) throws IOException {
 		System.out.println(teamName + " - Received get code request");
 
-		// To do: Update this at the nd
+		// To do: Update this at the end
 		//Put the source code into sourceCode in order to send to the server
 		String sourceCode = "import java.io.*;\r\n" + 
 				"import java.net.Socket;\r\n" + 
@@ -233,12 +239,12 @@ public class client{
 	// Gets a list of peers and return it in string format
 	public static String peersToString(ArrayList<String> peersArray){
 		String peers = "";
-		for (int i=0;i<peersArray.size();i++) {
+		for (int i = 0; i < peersArray.size();i++) {
 			if (i == 0){ //Don't add \n to the first entry
-				peers+=peersArray.get(i); 
+				peers += peersArray.get(i); 
 			}
 			else{ //Add to the other entries
-				peers+="\n" + peersArray.get(i);
+				peers += "\n" + peersArray.get(i);
 			}
 		}
 		return peers;
@@ -261,10 +267,8 @@ public class client{
 		String currentPeerListString = peersToString(currentPeerList);
 		int numberOfUDPsReceived = 99999; //To do: Use actual variable
 		String UDPMessagesReceived = "To do: UDPMessagesReceived"; //To do: Use actual variable
-		int numberOfUDPsSent = 99999; //To do: Use actual variable
-		String UDPMessagesSent = "To do: UDPMessagesSent"; //To do: Use actual variable
+		int numberOfUDPsSent = countLines(UDPMessagesSent);
 		int numberOfSnippets = countLines(snips);
-		String snippetContents = snips; 
 
 		// Format report
 		String report = 
@@ -273,14 +277,14 @@ public class client{
 		numberOfSources + "\n" + 
 		sourceLocation + "\n" +   
 		reportDateReceived + "\n" +
-		totalcurrentPeers + "\n" + // To do: Check this is correct with multiple peers
-		currentPeerListString + "\n" + // To do: Check this is correct with multiple peers
+		totalcurrentPeers + "\n" + //
+		currentPeerListString + "\n" + 
 		numberOfUDPsReceived + "\n" +
 		UDPMessagesReceived + "\n" +
 		numberOfUDPsSent + "\n" +
 		UDPMessagesSent + "\n" +
 		numberOfSnippets + "\n" +
-		snippetContents + "\n";
+		snips + "\n";
 
 		System.out.println("report \n" + report);
 		return report;
@@ -383,6 +387,7 @@ public class client{
 
 	// Initialize all global variables
 	public static void initializeGlobalVariables() throws SocketException{
+		UDPMessagesSent = "";
 		sourceLocation = serverIP + ":" + serverPort;
 		numberOfSources = 0;
         peerListRegistry = new ArrayList <String>();
@@ -473,11 +478,12 @@ public class client{
 					input = input.substring(0, maxSnipLength);
 				}
 				try {
-					String snip=nextSnipTimestamp +" "+ input + " " + peer.getAddress().toString().replace("/", "") + ":" + peer.getPort();
+					String snip = nextSnipTimestamp +" "+ input + " " + peer.getAddress().toString().replace("/", "") + ":" + peer.getPort();
+					UDPMessagesSent += snip + "\n";
 					if(snips != null) {
-						snips += snip+"\n";
+						snips += snip + "\n";
 					}else {
-						snips = snip+"\n";
+						snips = snip + "\n";
 					}
 					peer.sendInfo("snip "+ snips);
 					
