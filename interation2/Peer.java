@@ -35,6 +35,8 @@ public class Peer  {
 		String message=new String(UDPinPacket.getData(),0,UDPinPacket.getLength());
 		return message;
 	}
+
+	//get sender's location
 	public String getLocation() {
 		String address=UDPinPacket.getAddress().toString();
 		int port=UDPinPacket.getPort();
