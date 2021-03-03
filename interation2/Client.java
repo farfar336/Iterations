@@ -1,4 +1,4 @@
-package Iteration2;
+package interation2;
 /*
 To do: 
 	Document the following, specified by the TA:

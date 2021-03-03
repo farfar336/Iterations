@@ -14,7 +14,7 @@
             "type": "java",
             "name": "Launch Client",
             "request": "launch",
-            "mainClass": "Iteration2.Client",
+            "mainClass": "interation2.Client",
             "projectName": "Iterations_3465a5b",
             "args": [
                 "192.168.1.65",
