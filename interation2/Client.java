@@ -97,7 +97,6 @@ public class Client{
 	public static int nextSnipTimestamp;
 	public static final int maxSnipLength=25;
 	
-	
 	// Sends the string to the server
 	public static void sendToServer(String toServer, Socket clientSocket) throws IOException {
 		clientSocket.getOutputStream().write(toServer.getBytes());
@@ -271,9 +270,9 @@ public class Client{
 		String reportDateReceived = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(aDate);
 		int totalCurrentPeers = currentPeerList.size(); 
 		String currentPeerListString = peersToString(currentPeerList);
-		peersReceived = "To do: peersReceived"; //To do: Use actual variable
+		peersReceived = "To do: peersReceived"; //To do: Remove later
 		int numberOfPeersReceived = countLines(peersReceived);
-		peersSent = "To do: peersSent"; //To do: Use actual variable
+		peersSent = "To do: peersSent"; //To do: Remove later
 		int numberOfPeersSent = countLines(peersSent);
 		int numberOfSnippets = countLines(snippets);
 
@@ -486,7 +485,7 @@ public class Client{
 	});
 	
 	// Check if a peer is active or not. If a peer does not send their peer info for more than 4 mins, then remove it from the active peer list
-	static Thread checkActivePeerThread=new Thread(new Runnable() {
+	static Thread checkActivePeerThread = new Thread(new Runnable() {
 		@Override
 		public void run() {
 			while(!peer.stop) {
