@@ -79,6 +79,11 @@ public class Client{
 	public static Executor executor,executor1,executor2;
 	public static final int inactiveTimeLimit=240;
 
+	// this is a hashmap that stores location and time
+	// location is the other peer's location
+	// time is the timestamp(in second) that receive the peer info from this peer's location
+	public static ConcurrentHashMap<String,Long> locationAndTime;
+
 	// Variables related to connecting client
 	public static Socket clientSocket;
 	public static BufferedReader reader;
@@ -88,10 +93,10 @@ public class Client{
 	// Variables related to UDP messages
 	public static String UDPMessagesSent;
 	public static String snips;
-	public static ConcurrentHashMap<String,Long> locationAndTime;
 	public static int nextSnipTimestamp;
 	public static final int maxSnipLength=25;
-
+	
+	
 	// Sends the string to the server
 	public static void sendToServer(String toServer, Socket clientSocket) throws IOException {
 		clientSocket.getOutputStream().write(toServer.getBytes());
@@ -401,35 +406,21 @@ public class Client{
 		executor2 = Executors.newSingleThreadExecutor();
 		nextSnipTimestamp = 0;
 	}
-	
-	// To do: Comment on what this function does 
-	public static void sendPeer() throws InterruptedException {
-		if(currentPeerList.size()>0) {
-			for(int i = 0; i < currentPeerList.size(); i++) {
-				InetAddress ip;
-				System.out.println(currentPeerList.get(i));
-				try {
-					ip = InetAddress.getByName(currentPeerList.get(i).split(":")[0].toString().replace("/", ""));
-					int port=Integer.parseInt(currentPeerList.get(i).split(":")[1]);
-					String message="peer"+peer.getAddress()+":"+peer.getPort();
-					peer.sendMessage(message.replace("/", ""), ip, port);
-				} catch (UnknownHostException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}				
-			}
-		}			
-	}
 
-	// To do: Comment on what this function does 
+
+	// Detect if the time difference between current time and recorded time is greater than 240 seconds
+	//return true if time difference is greater than 240 seconds
+	//otherwise return false
 	public static Boolean notResponse(long currentTime,long time) {
 		return(currentTime-time)>inactiveTimeLimit;
 	}
 	
-	// To do: Comment on what this function does 
+	// peer.getMessage() will return a peer's location, if any other peer send their peer info. return null if it is not peer info
+	// update the snips with the latest snips in the peer class
+	// 
+	//if any peer send peer information, newPeer= this peer's location otherwise newPeer=null
+	//update the time of location in the hashmap
+
 	public static void receiveMessage() {
 		try {
 			String newPeer = peer.getMessage();
@@ -451,7 +442,7 @@ public class Client{
 		}
 	}
 
-	// To do: Comment on what this function does 
+	// a thread collaborate with other peers, send peer information to other peers
 	static Thread collaborationThread = new Thread (new Runnable() {
 		public void run() {
 			while(!peer.stop) {
@@ -466,7 +457,11 @@ public class Client{
 		}	
 	});
 
-	// To do: Comment on what this function does 
+	//get input from user and modify the input, if input has more than 25 characters, get the first 25 character
+	//snip = timestamp+input+address of this peer:port of this peer
+	//add snip to snips
+	//send snips
+
 	static Thread getSnipThread = new Thread(new Runnable() {
 		@Override
 		public void run() {
@@ -496,7 +491,8 @@ public class Client{
 		}
 	});
 	
-	// To do: Comment on what this function does
+	// check if a peer is active or not. If a peer does not send their peer info for more than 4 mins
+	// ask peer to delete this inactive peer from activePeerList
 	static Thread checkActivePeerThread=new Thread(new Runnable() {
 		@Override
 		public void run() {
@@ -506,7 +502,6 @@ public class Client{
 				    String location = entry.getKey();
 				    long time = entry.getValue();
 				    if(notResponse(currentTime,time)) {
-				    	//did not update after deleting
 				    	System.out.println(location + "    disconnected" );
 				    	peer.removePeerFromActivePeerList(location);
 				    	locationAndTime.remove(location);
