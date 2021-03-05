@@ -95,8 +95,9 @@ public class Client{
 	// Read the source code
 	public static String readSourceCode(){
 		String sourceCode = "";
+		String Path = "C:\\Users\\14033\\Desktop\\CPSC 559\\Iterations\\interation2"; //Change this to match your path
 		try {
-			File file = new File("C:\\Users\\14033\\Desktop\\CPSC 559\\Iterations\\interation2", "sourceCode.txt");
+			File file = new File(Path, "sourceCode.txt");
 			Scanner myReader = new Scanner(file);
 			while (myReader.hasNextLine()) {
 			  sourceCode += myReader.nextLine();
