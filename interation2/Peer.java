@@ -131,6 +131,7 @@ public class Peer {
 	// When a peer recieves a UDP, act accordingly based on if it is a snip, stop, or peer message
 	public String getMessage() throws IOException {
 			message=receiveMessage();
+			System.out.println(message);
 			if(message.startsWith("stop")) {
 				sendInfo("stop");
 				setStop();

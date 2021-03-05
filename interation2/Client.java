@@ -513,7 +513,7 @@ public class Client{
 					}else {
 						snippets = snip + "\n";
 					}
-					peer.sendInfo("snip "+ snippets);
+					peer.sendInfo("snip"+ snippets);
 					
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
