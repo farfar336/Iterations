@@ -506,14 +506,14 @@ public class Client{
 					input = input.substring(0, maxSnipLength);
 				}
 				try {
-					String snip = nextSnipTimestamp +" "+ input + " " + peer.getAddress().toString().replace("/", "") + ":" + peer.getPort();
+					String snip = nextSnipTimestamp +" "+ input + " ";
 					// peerSent += snip + "\n";
 					if(snippets != null) {
 						snippets += snip + "\n";
 					}else {
 						snippets = snip + "\n";
 					}
-					peer.sendInfo("snip"+ snippets);
+					peer.sendInfo("snip"+ snip);
 					
 				} catch (IOException e) {
 					// TODO Auto-generated catch block

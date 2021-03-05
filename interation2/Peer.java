@@ -66,14 +66,14 @@ public class Peer {
 		return location;
 	}
 
-	// Gets the location of the peer
-	// public String getLocation() {
-	// 	String address = UDPinPacket.getAddress().toString();
-	// 	int port = UDPinPacket.getPort();
-	// 	String location = address + ":" + port;
-	// 	UDPinPacket = new DatagramPacket(inbuf,inbuf.length);
-	// 	return location;
-	// }
+	//Gets the location of the peer
+	public String getLocation() {
+		String address = UDPinPacket.getAddress().toString().replace("/","");
+		int port = UDPinPacket.getPort();
+		String location = address + ":" + port;
+		UDPinPacket = new DatagramPacket(inbuf,inbuf.length);
+		return location;
+	}
 	
 	// Get the port number of this UDP server
 	public int getPort() {
@@ -138,10 +138,16 @@ public class Peer {
 				System.out.println("receive stop message");
 			}
 			else if(message.startsWith("snip")) {
-				snips=message.replace("snip", "");
+				String newsnip=message.replace("snip", "");
+				if(snips==null){
+					snips=message.replace("snip", "")+" "+getLocation()+"\n";
+				}else{
+					snips+=message.replace("snip", "")+" "+getLocation()+"\n";
+				}
+			
 				if(!snips.isEmpty()) {
-					System.out.println(snips);
-					String[] snipArray=snips.split("\n");
+					System.out.println(newsnip);
+					String[] snipArray=newsnip.split("\n");
 					nextTimeStamp=Integer.parseInt(snipArray[snipArray.length-1].split(" ")[0])+1;
 				}
 
@@ -152,14 +158,14 @@ public class Peer {
 				System.out.println("Peer added   "+peer);
 				return peer;
 			}
-			else if(message.startsWith("historyOfSnippets ")) {
-				snips=message.replace("historyOfSnippets ", "");
-				if(!snips.isEmpty()) {
+			// else if(message.startsWith("historyOfSnippets ")) {
+			// 	snips=message.replace("historyOfSnippets ", "");
+			// 	if(!snips.isEmpty()) {
 					
-					String[] snipArray=snips.split("\n");
-					nextTimeStamp=Integer.parseInt(snipArray[snipArray.length-1].split(" ")[0])+1;
-				}
-			}
+			// 		String[] snipArray=snips.split("\n");
+			// 		nextTimeStamp=Integer.parseInt(snipArray[snipArray.length-1].split(" ")[0])+1;
+			// 	}
+			// }
 			return null;
 	}
 	// Remove a peer from active peer list
