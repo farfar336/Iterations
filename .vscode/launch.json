@@ -12,9 +12,9 @@
         },
         {
             "type": "java",
-            "name": "Launch client",
+            "name": "Launch Client",
             "request": "launch",
-            "mainClass": "interation2.client",
+            "mainClass": "interation2.Client",
             "projectName": "Iterations_3465a5b",
             "args": [
                 "192.168.1.65",
