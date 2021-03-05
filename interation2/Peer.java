@@ -94,10 +94,16 @@ public class Peer {
 	}
 	
 	// Add peer to active peerlist
-	public void addActivePeer(String peer) {
-		peer = peer.replace("/", "");
+	//if this peer is a new peer, and there is a snippet history, send this peer with the history of snippets
+	public void addActivePeer(String peer) throws IOException {
+		peer=peer.replace("/", "");
 		if(!activePeerList.contains(peer)) {
 			activePeerList.add(peer);
+			if(snips!=null) {
+				InetAddress ip=InetAddress.getByName(peer.split(":")[0]);
+				int port=Integer.parseInt(peer.split(":")[1]);
+				sendMessage("historyOfSnippets "+snips,ip,port);
+			}
 		}	
 	}
 	
@@ -124,25 +130,36 @@ public class Peer {
 	
 	// When a peer recieves a UDP, act accordingly based on if it is a snip, stop, or peer message
 	public String getMessage() throws IOException {
-		message = receiveMessage();
-		if(message.equals("stop")) {
-			sendInfo("stop");
-			setStop();
-			System.out.println("receive stop message");
-		}
-		else if(message.startsWith("snip")) {
-			snips = message.replace("snip ", "");
-			System. out.println(snips);
-			String[] snipArray = snips.split("\n");
-			nextTimeStamp=Integer.parseInt(snipArray[snipArray.length-1].split(" ")[0])+1;
+			message=receiveMessage();
+			if(message.equals("stop")) {
+				sendInfo("stop");
+				setStop();
+				System.out.println("receive stop message");
 			}
-		else if(message.startsWith("peer")){
-			String peer = message.replace("peer", "");
-			addActivePeer(peer);
-			System.out.println("Peer added " + peer);
-			return peer;
-		}
-		return null;
+			else if(message.startsWith("snip")) {
+				snips=message.replace("snip ", "");
+				if(!snips.isEmpty()) {
+					System.out.println(snips);
+					String[] snipArray=snips.split("\n");
+					nextTimeStamp=Integer.parseInt(snipArray[snipArray.length-1].split(" ")[0])+1;
+				}
+
+			}
+			else if(message.startsWith("peer")){
+				String peer=message.replace("peer", "");
+				addActivePeer(peer);
+				System.out.println("Peer added   "+peer);
+				return peer;
+			}
+			else if(message.startsWith("historyOfSnippets ")) {
+				snips=message.replace("historyOfSnippets ", "");
+				if(!snips.isEmpty()) {
+					
+					String[] snipArray=snips.split("\n");
+					nextTimeStamp=Integer.parseInt(snipArray[snipArray.length-1].split(" ")[0])+1;
+				}
+			}
+			return null;
 	}
 	// Remove a peer from active peer list
 	public void removePeerFromActivePeerList(String peer) {
