@@ -15,7 +15,7 @@ To do:
 		-Shutting down system requirements (stop UDP/IP messages) [Xudong] (done)
 
 	Other requirements:
-		-Class diagram of your solution to the D2L dropbox for this iteration. [Farrukh]
+		-Class diagram of your solution to the D2L dropbox for this iteration. [Farrukh] (done)
 		-A video that gives a brief explanation of your implementation and shows your peer in action. The length
 		of your video should be between 2 and 7 minutes. Only the first 7 minutes of your video will be viewed
 		when grading. Use the same D2L dropbox to either upload the video or provide a link to your video. [Farrukh]
