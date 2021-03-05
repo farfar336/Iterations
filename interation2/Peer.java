@@ -5,9 +5,10 @@ import java.util.ArrayList;
 
 /*
 Key functions:
-	-setUpUDPserver: Setup a UDP socket and store the port number of UDP
+	-setUpUDPserver: This method will setup a UDP socket and store the port number of UDP
 	-receiveMessage: Receive the message from other UDP
-	-getLocation: Gets the location of the peer
+	-getMyLocation: Get the location of our peer
+	-getPeerLocation: Get the location of a peer
 	-getPort: Get the port number of this UDP server
 	-getAddress: Get the IP address of the UDP server
 	-sendMessage: Send message to other UDP server
@@ -15,7 +16,7 @@ Key functions:
 	-setActivePeerList: Set active peer list
 	-setStop: If we receive a stop, then close the UDP
 	-sendInfo: Send info to other server
-	-getMessage: Receive message, if there is any new peer, return the peer
+	-getMessage: When a peer recieves a UDP, act accordingly based on if it is a snip, stop, or peer message
 	-removePeerFromActivePeerList: Remove a peer from active peer list
 	-sendPeer: Send peer information
 */
@@ -47,7 +48,7 @@ public class Peer {
 		return message;
 	}
 
-	// Get the location of the peer
+	// Get the location of our peer
 	public String getMyLocation() throws UnknownHostException {
 		String IP = String.valueOf(getAddress());
 		IP = IP.replace("/",""); //Remove the / at the beginning
@@ -56,6 +57,7 @@ public class Peer {
 		return location;
 	}
 
+	// Get the location of a peer
 	public String getPeerLocation(String peer) throws UnknownHostException {
 		String IP = String.valueOf(InetAddress.getByName(peer.split(":")[0]));
 		IP = IP.replace("/",""); //Remove the / at the beginning

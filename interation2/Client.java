@@ -4,7 +4,7 @@ To do:
 	Document the following, specified by the TA:
 		-state briefly that functional programming is the approach at play here [Farrukh] (done)
 		-break down the general flow and structure of your script/program [Farrukh] (done)
-		-Mention key classnames, function names, design patterns used, etc... Try to form somewhat of a cohesive narrative in this section, so it reads like a passage from your favorite novel. [Farrukh]
+		-Mention key classnames, function names, design patterns used, etc... Try to form somewhat of a cohesive narrative in this section, so it reads like a passage from your favorite novel. [Farrukh] (done)
 
 	Code requirements:
 		-Location Request [Farrukh] (done)
@@ -32,7 +32,27 @@ To do:
 	When the system is shutting down, it will send a message to all peers and terminate them. Finally, the registry is connected 
 	again to process requests. After the requests are complete, the system stops.
 	-Key functions: 
-		-To do
+		-sendToServer: Sends the string to the server
+		-teamNameRequest: Sends the team name to the server
+		-codeRequest: Sends the code to the server
+		-arrayToString: Gets a list of peers and return it in string format
+		-countLines: Returns the number of UDP
+		-getReport: Get the report 
+		-reportRequest: Gets report about peers and sends it to the server
+		-storePeers: Store peers 
+		-peersRequest: Receives and stores peers
+		-locationRequest: Sends the team name to the server
+		-processRequests: Process requests from the server
+		-connectClient: Connect client to server
+		-readCommandLineArguements: Read command line arguements
+		-initializeGlobalVariables: Initialize all global variables
+		-checkTimeLimit: Check if the time difference between current time and recorded time is greater than 240 seconds
+		-addToPeersSent: Store info about a message when we send a peer and format it properly
+		-addToPeersReceived: Store info about a message when a peer is received and format it properly
+		-receiveMessage: Handle the logic for a when peer receives a message
+		-collaborationThread: A thread to collaborate with other peers and send peer information to them
+		-getSnipThread: Get input from user and format it. If input has more than 25 characters, get the first 25 characters
+		-checkActivePeerThread: Check if a peer is active or not. If a peer does not send their peer info for more than 4 mins, then remove it from the active peer list
 */
 
 // Importing libraries
@@ -278,7 +298,7 @@ public class Client{
 		numberOfSnippets + "\n" +
 		snippets;
 
-		System.out.println("start of report" + report + "end of report");
+		System.out.println("start of report \n" + report + "end of report");
 		return report;
 	}
 
@@ -335,7 +355,7 @@ public class Client{
 
 		// teamLocation = peer.getLocation();
 		// System.out.println("Team location: " + teamLocation);
-		System.out.println("I'm at location: " + peer.getPort());
+		System.out.println("I'm at location: " + peer.getMyLocation());
 		sendToServer(toServer, clientSocket);
 		System.out.println(teamName + " - Finished request");
 	}
