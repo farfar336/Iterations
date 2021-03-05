@@ -509,9 +509,11 @@ public class Client{
 					String snip = nextSnipTimestamp +" "+ input + " ";
 					// peerSent += snip + "\n";
 					if(snippets != null) {
-						snippets += snip + "\n";
+						snippets += snip ;
+						
 					}else {
-						snippets = snip + "\n";
+						snippets = snip ;
+						
 					}
 					peer.sendInfo("snip"+ snip);
 					
