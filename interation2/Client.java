@@ -96,10 +96,10 @@ public class Client{
 	public static String readSourceCode(){
 		String sourceCode = "";
 		try {
-			File myObj = new File("sourceCode.txt");
-			Scanner myReader = new Scanner(myObj);
+			File file = new File("C:\\Users\\14033\\Desktop\\CPSC 559\\Iterations\\interation2", "sourceCode.txt");
+			Scanner myReader = new Scanner(file);
 			while (myReader.hasNextLine()) {
-			  sourceCode = myReader.nextLine();
+			  sourceCode += myReader.nextLine();
 			//   System.out.println(data);
 			}
 			myReader.close();
@@ -108,7 +108,7 @@ public class Client{
 			e.printStackTrace();
 		  }
 
-		System.out.println("sourceCode: " + sourceCode);
+		// System.out.println("sourceCode: " + sourceCode);
 		return sourceCode;
 	}
 
