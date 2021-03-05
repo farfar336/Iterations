@@ -1,4 +1,4 @@
-Wed Mar 03 11:17:22 MST 2021
+Thu Mar 04 19:39:17 MST 2021
 java
 import java.io.*;
 import java.net.Socket;
@@ -14,10 +14,10 @@ public class clientSocket{
 	public static String codeResponse="Java\n";
 	public static int totalPeers=0;
 	public static String peers="";
-	public static ArrayList<String> peerListRegistry;
+	public static ArrayList<String> peerList;
 	public static String date="";
 	public static String command=null;
-	public static int numberOfSources=0;
+	public static int numOfSource=0;
 	public static String sourceLocation;
 	public static int port;
 	public static String ip;
@@ -40,10 +40,10 @@ public class clientSocket{
 	//send the report to server
 	public static void getReport(Socket clientSocket) throws IOException {
 		peers="";
-		for (int i=0;i<peerListRegistry.size();i++) {
-			peers+=peerListRegistry.get(i)+"\n";
+		for (int i=0;i<peerList.size();i++) {
+			peers+=peerList.get(i)+"\n";
 		}
-		String toServer=totalPeers+"\n"+peers+numberOfSources+"\n";;
+		String toServer=totalPeers+"\n"+peers+numOfSource+"\n";;
 		for(Map.Entry<String, String> entry : peersHashMap.entrySet()) {
 		    String key = entry.getKey().split("\n")[0];
 		    Date getDate  =new Date( Long.parseLong(entry.getKey().split("\n")[1]));
@@ -64,7 +64,7 @@ public class clientSocket{
 		System.out.println(date);
 		int num=Integer.parseInt(reader.readLine());
 		if(num>0) {
-			numberOfSources+=1;
+			numOfSource+=1;
 		}
 		totalPeers+=num;
 		System.out.println("num of peers :"+num+"\n");
@@ -72,8 +72,8 @@ public class clientSocket{
 			peers="";
 			for(int i=0;i<num;i++) {
 				String peer=reader.readLine();		
-				if(!peerListRegistry.contains(peer)) {
-					peerListRegistry.add(peer);
+				if(!peerList.contains(peer)) {
+					peerList.add(peer);
 				}else {
 					totalPeers-=1;
 				}
@@ -91,7 +91,7 @@ public class clientSocket{
     	port=Integer.parseInt(args[1]);
     	sourceLocation=ip+":"+port;
         Socket clientSocket=new Socket(ip,port);
-        peerListRegistry =new ArrayList<String>();
+        peerList =new ArrayList<String>();
         peersHashMap=new HashMap<String, String>();
         BufferedReader reader=new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         while (!(command=reader.readLine()).startsWith("close")) {

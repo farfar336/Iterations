@@ -272,13 +272,13 @@ public class Client{
 		totalPeersFromRegistry + "\n" + 
 		peersFromRegistry + "\n" + 
 		numberOfPeersReceived + "\n" +
-		peersReceived + "\n" +
+		peersReceived +
 		numberOfPeersSent + "\n" +
-		peersSent + "\n" +
+		peersSent +
 		numberOfSnippets + "\n" +
-		snippets + "\n";
+		snippets;
 
-		System.out.println("report \n" + report);
+		System.out.println("start of report" + report + "end of report");
 		return report;
 	}
 
