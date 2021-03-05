@@ -289,7 +289,7 @@ public class Client{
 		int numberOfPeersReceived = countLines(peersReceived);
 		int numberOfPeersSent = countLines(peersSent);
 		int numberOfSnippets = countLines(snippets);
-		snippets = removeLastLine(snippets);
+		//snippets = removeLastLine(snippets);
 
 		// Format report
 		String report = 
@@ -307,7 +307,7 @@ public class Client{
 		numberOfSnippets + "\n" +
 		snippets;
 
-		// System.out.println("start of report \n" + report + "end of report");
+		//System.out.println("start of report \n" + report + "end of report");
 		return report;
 	}
 
@@ -565,5 +565,6 @@ public class Client{
 		// Process requests after shutting down
 		connectClient(serverIP, serverPort);
 		processRequests(); 
+		System.exit(1);
     }
 }
