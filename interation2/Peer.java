@@ -158,14 +158,14 @@ public class Peer {
 				System.out.println("Peer added   "+peer);
 				return peer;
 			}
-			// else if(message.startsWith("historyOfSnippets ")) {
-			// 	snips=message.replace("historyOfSnippets ", "");
-			// 	if(!snips.isEmpty()) {
+			else if(message.startsWith("historyOfSnippets ")) {
+				snips=message.replace("historyOfSnippets ", "");
+				if(!snips.isEmpty()) {
 					
-			// 		String[] snipArray=snips.split("\n");
-			// 		nextTimeStamp=Integer.parseInt(snipArray[snipArray.length-1].split(" ")[0])+1;
-			// 	}
-			// }
+					String[] snipArray=snips.split("\n");
+					nextTimeStamp=Integer.parseInt(snipArray[snipArray.length-1].split(" ")[0])+1;
+				}
+			}
 			return null;
 	}
 	// Remove a peer from active peer list
