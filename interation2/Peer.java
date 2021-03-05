@@ -47,14 +47,31 @@ public class Peer {
 		return message;
 	}
 
-	// Gets the location of the peer
-	public String getLocation() {
-		String address = UDPinPacket.getAddress().toString();
-		int port = UDPinPacket.getPort();
-		String location = address + ":" + port;
-		UDPinPacket = new DatagramPacket(inbuf,inbuf.length);
+	// Get the location of the peer
+	public String getMyLocation() throws UnknownHostException {
+		String IP = String.valueOf(getAddress());
+		IP = IP.replace("/",""); //Remove the / at the beginning
+		String port = String.valueOf(UDPport);
+		String location = IP + ":" + port;
 		return location;
 	}
+
+	public String getPeerLocation(String peer) throws UnknownHostException {
+		String IP = String.valueOf(InetAddress.getByName(peer.split(":")[0]));
+		IP = IP.replace("/",""); //Remove the / at the beginning
+		String port = String.valueOf(Integer.parseInt(peer.split(":")[1]));
+		String location = IP + ":" + port;
+		return location;
+	}
+
+	// Gets the location of the peer
+	// public String getLocation() {
+	// 	String address = UDPinPacket.getAddress().toString();
+	// 	int port = UDPinPacket.getPort();
+	// 	String location = address + ":" + port;
+	// 	UDPinPacket = new DatagramPacket(inbuf,inbuf.length);
+	// 	return location;
+	// }
 	
 	// Get the port number of this UDP server
 	public int getPort() {
@@ -93,7 +110,7 @@ public class Peer {
 		stop = true;
 		UDPserver.close();
 	}
-	
+
 	// Send info to other server
 	public void sendInfo(String message) throws IOException {
 		for(int i = 0; i < activePeerList.size(); i++) {
@@ -103,7 +120,7 @@ public class Peer {
 		}
 	}
 	
-	// Receive message, if there is any new peer, return the peer
+	// When a peer recieves a UDP, act accordingly based on if it is a snip, stop, or peer message
 	public String getMessage() throws IOException {
 		message = receiveMessage();
 		if(message.equals("stop")) {

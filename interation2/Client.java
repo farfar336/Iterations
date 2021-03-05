@@ -32,24 +32,7 @@ To do:
 	When the system is shutting down, it will send a message to all peers and terminate them. Finally, the registry is connected 
 	again to process requests. After the requests are complete, the system stops.
 	-Key functions: 
-		-readCommandLineArguements: Read command line arguments
-		-initializeGlobalVariables: Initialize all global variables
-		-connectClient: Connect client to server
-		-processRequests: Process requests from the server
-		-teamNameRequest: Sends the team name to the server
-		-codeRequest: Sends the code to the server
-		-peersRequest: Receives and stores peers
-		-reportRequest: Gets report about peers and sends it to the server
-		-locationRequest: Sends the location to the server
-		-storePeers: Stores peers
-		-getPeers: Gets a list of peers and returns it in string format
-		-sendToServer: Sends the string to the server
-		-sendPeer: To do
-		-checkTimeLimit:
-		-receiveMessage:
-		-collaborationThread:
-		-getSnipThread:
-		-checkActivePeerThread:
+		-To do
 */
 
 // Importing libraries
@@ -67,8 +50,7 @@ public class Client{
 
 	// Variables related to team information
 	public static String teamName;
-	public static String sourceLocation;
-	public static int numberOfSources;
+	public static String teamLocation;
 
 	// Variables related to peers
 	public static int totalPeers;
@@ -87,8 +69,10 @@ public class Client{
 	// Variables related to connecting client
 	public static Socket clientSocket;
 	public static BufferedReader reader;
+	public static String sourceLocation;
 	public static String serverIP;
 	public static int serverPort;
+	public static int numberOfSources;
 
 	// Variables related to UDP messages
 	public static String peersReceived;
@@ -242,7 +226,7 @@ public class Client{
 	}
 	
 	// Gets a list of peers and return it in string format
-	public static String peersToString(ArrayList<String> peersArray){
+	public static String arrayToString(ArrayList<String> peersArray){
 		String peers = "";
 		for (int i = 0; i < peersArray.size();i++) {
 			if (i == 0){ //Don't add \n to the first entry
@@ -257,34 +241,36 @@ public class Client{
 
 	// Returns the number of UDP
 	public static int countLines(String str){
-		String[] lines = str.split("\r\n|\r|\n");
-		return  lines.length;
+		if (str != null){
+			String [] lines = str.split("\r\n|\r|\n");
+			return lines.length;
+		}
+		else
+			return 0;
 	}
 
 	// Get the report 
 	public static String getReport(){
 		// Prepare variables
 		int totalPeersFromRegistry = peerListRegistry.size();
-		String peersFromRegistry = peersToString(peerListRegistry);
+		String peersFromRegistry = arrayToString(peerListRegistry);
 		Date aDate = new Date();
 		String reportDateReceived = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(aDate);
 		int totalCurrentPeers = currentPeerList.size(); 
-		String currentPeerListString = peersToString(currentPeerList);
-		peersReceived = "To do: peersReceived"; //To do: Remove later
+		String currentPeerListString = arrayToString(currentPeerList);
 		int numberOfPeersReceived = countLines(peersReceived);
-		peersSent = "To do: peersSent"; //To do: Remove later
 		int numberOfPeersSent = countLines(peersSent);
 		int numberOfSnippets = countLines(snippets);
 
 		// Format report
 		String report = 
-		totalPeersFromRegistry + "\n" +
-		peersFromRegistry + "\n" +
+		totalCurrentPeers + "\n" +
+		currentPeerListString + "\n" +
 		numberOfSources + "\n" + 
 		sourceLocation + "\n" +   
 		reportDateReceived + "\n" +
-		totalCurrentPeers + "\n" + 
-		currentPeerListString + "\n" + 
+		totalPeersFromRegistry + "\n" + 
+		peersFromRegistry + "\n" + 
 		numberOfPeersReceived + "\n" +
 		peersReceived + "\n" +
 		numberOfPeersSent + "\n" +
@@ -337,7 +323,7 @@ public class Client{
 			storePeers(numOfPeersReceived, reader);
 		}
 
-		peerListRegistry = currentPeerList;
+		peerListRegistry = new ArrayList<String>(currentPeerList);
 		System.out.println(teamName + " - Finished request");
 	}
 
@@ -347,6 +333,8 @@ public class Client{
 
 		String toServer = InetAddress.getLocalHost().toString().split("/")[1]+":" +peer.getPort() + "\n";
 
+		// teamLocation = peer.getLocation();
+		// System.out.println("Team location: " + teamLocation);
 		System.out.println("I'm at location: " + peer.getPort());
 		sendToServer(toServer, clientSocket);
 		System.out.println(teamName + " - Finished request");
@@ -393,10 +381,11 @@ public class Client{
 
 	// Initialize all global variables
 	public static void initializeGlobalVariables() throws SocketException{
+		peersReceived = "";
 		peersSent = "";
+		teamLocation = "";
 		sourceLocation = serverIP + ":" + serverPort;
 		numberOfSources = 0;
-        peerListRegistry = new ArrayList <String>();
 		currentPeerList = new ArrayList <String>();
 		totalPeers = 0;
 		peer = new Peer();
@@ -410,20 +399,40 @@ public class Client{
 
 	// Check if the time difference between current time and recorded time is greater than 240 seconds
 	public static Boolean checkTimeLimit(long currentTime,long time) {
-		return(currentTime-time) > inactiveTimeLimit;
+		return (currentTime-time) > inactiveTimeLimit;
 	}
 	
-	// peer.getMessage() will return a peer's location, if any other peer send their peer info. return null if it is not peer info
-	// update the snips with the latest snips in the peer class
-	// 
-	//if any peer send peer information, newPeer= this peer's location otherwise newPeer=null
-	//update the time of location in the hashmap
+	// Store info about a message when we send a peer and format it properly
+	public static void addToPeersSent() throws UnknownHostException {
+		ArrayList<String> activePeerList = peer.activePeerList;
+
+		for(int i = 0; i < activePeerList.size(); i++) {
+			String toPeer = peer.getPeerLocation(activePeerList.get(i));
+			String fromPeer = peer.getMyLocation(); 
+			Date aDate = new Date();
+			String dateSent = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(aDate);
+			peersSent += toPeer + " " +  fromPeer + " " +  dateSent + "\n";
+		}
+	}
+
+	// Store info about a message when a peer is received and format it properly
+	public static void addToPeersReceived(String aPeer) throws UnknownHostException {
+		String fromPeer = peer.getPeerLocation(aPeer); 
+		String toPeer = peer.getMyLocation(); //To do: fix this later
+		Date aDate = new Date();
+		String dateReceived = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(aDate);
+
+		peersReceived += fromPeer + " " +  toPeer + " " +  dateReceived + "\n";
+	}
+
+	// Handle the logic for a when peer receives a message
 	public static void receiveMessage() {
 		try {
 			String newPeer = peer.getMessage();
 			snippets = peer.snips;
 			nextSnipTimestamp = peer.nextTimeStamp;
 			if(newPeer != null) {
+				addToPeersReceived(newPeer);
 				if(!currentPeerList.contains(newPeer)) {
 					currentPeerList.add(newPeer);
 				}
@@ -445,6 +454,7 @@ public class Client{
 			while(!peer.stop) {
 				try {
 					peer.sendPeer();
+					addToPeersSent();
 					Thread.sleep(60000);
 				} catch (InterruptedException | IOException e) {
 					// TODO Auto-generated catch block
@@ -517,7 +527,7 @@ public class Client{
 		executor1.execute(collaborationThread);
 		executor.execute(getSnipThread);
 		executor2.execute(checkActivePeerThread);
-		
+
 		while(!peer.stop) {
 			receiveMessage();
 		}
