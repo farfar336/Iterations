@@ -100,7 +100,7 @@ public class Client{
 			File file = new File(Path, "sourceCode.txt");
 			Scanner myReader = new Scanner(file);
 			while (myReader.hasNextLine()) {
-			  sourceCode += myReader.nextLine();
+			  sourceCode += myReader.nextLine() + "\n";
 			//   System.out.println(data);
 			}
 			myReader.close();
