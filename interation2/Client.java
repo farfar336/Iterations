@@ -1,5 +1,8 @@
 package interation2;
 /*
+	To do:
+		-In iteration3, check that both output files have the correct content from the server
+
 	To run, enter this in command line: java interation2/Client 136.159.5.22 55921 "Xudong Farrukh"
 
  	Code documentation
@@ -256,8 +259,8 @@ public class Client{
 	}
 
 	// Puts a string into a file
-	public static void putStringIntoFile(String aString) throws FileNotFoundException{
-		try (PrintWriter out = new PrintWriter("serverOutput.txt");) {
+	public static void putStringIntoFile(String aString, String fileName) throws FileNotFoundException{
+		try (PrintWriter out = new PrintWriter(fileName);) {
 			out.println(aString);
 		}
 	}
@@ -270,7 +273,7 @@ public class Client{
 		while ((line = reader.readLine()) != null) {
 			code += line + "\n";
 		}
-		putStringIntoFile(code);
+		putStringIntoFile(code, "codeFromServer.txt");
 	}
 
 	// Recieves the report from the server and puts it into a file
@@ -281,7 +284,7 @@ public class Client{
 		while ((line = reader.readLine()) != null) {
 			report += line + "\n";
 		}
-		putStringIntoFile(report);
+		putStringIntoFile(report, "reportFromServer.txt");
 	}
 
 	// Process requests from the server
