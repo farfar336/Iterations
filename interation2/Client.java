@@ -94,6 +94,7 @@ public class Client{
 	public static ArrayList<String> peerListRegistry;
 	public static ArrayList<String> currentPeerList;
 	public static HashMap<String, String> peersHashMap;
+	public static volatile ConcurrentHashMap<Integer,ArrayList<String>> notResponseToSnip;
 	public static Peer peer;
 	public static Executor executor,executor1,executor2;
 	public static final int inactiveTimeLimit=240;
@@ -102,7 +103,6 @@ public class Client{
 	// location is the other peer's location
 	// time is the timestamp(in second) that receive the peer info from this peer's location
 	public static ConcurrentHashMap<String,Long> locationAndTime;
-
 	// Variables related to connecting client
 	public static Socket clientSocket;
 	public static BufferedReader reader;
@@ -111,12 +111,14 @@ public class Client{
 	public static int serverPort;
 	public static int numberOfSources;
 
+
 	// Variables related to UDP messages
 	public static String peersReceived;
 	public static String peersSent;
 	public static String snippets;
 	public static int nextSnipTimestamp;
 	public static final int maxSnipLength=25;
+	public static String latestSnip;
 	
 	// Sends the string to the server
 	public static void sendToServer(String toServer, Socket clientSocket) throws IOException {
@@ -314,7 +316,9 @@ public class Client{
 			case "get location":
 				locationRequest(clientSocket);
 				break;
+			
 			}
+			
 		}
 		clientSocket.close();
 	}
@@ -330,6 +334,7 @@ public class Client{
 		serverIP = args[0];
 		serverPort = Integer.parseInt(args[1]);
 		teamName = args[2];
+		
 	}
 
 	// Initialize all global variables
@@ -342,12 +347,15 @@ public class Client{
 		currentPeerList = new ArrayList <String>();
 		totalPeers = 0;
 		peer = new Peer();
+		peer.teamName=teamName;
 		peer.setUpUDPserver();
 		locationAndTime = new ConcurrentHashMap<String,Long>();
 		executor = Executors.newSingleThreadExecutor();
 		executor1 = Executors.newSingleThreadExecutor();
 		executor2 = Executors.newSingleThreadExecutor();
+//		deleteInactivePeerThread=new Thread(deleteInactivePeer);
 		nextSnipTimestamp = 0;
+		notResponseToSnip=new ConcurrentHashMap<Integer,ArrayList<String>>();
 	}
 
 	// Check if the time difference between current time and recorded time is greater than 240 seconds
@@ -381,17 +389,35 @@ public class Client{
 	// Handle the logic for a when peer receives a message
 	public static void receiveMessage() {
 		try {
-			String newPeer = peer.getMessage();
-			snippets = peer.snips;
-			nextSnipTimestamp = peer.nextTimeStamp;
-			if(newPeer != null) {
-				addToPeersReceived(newPeer);
-				if(!currentPeerList.contains(newPeer)) {
-					currentPeerList.add(newPeer);
+			String newMessage=peer.getMessage();
+			if(newMessage!=null) {
+				if(newMessage.startsWith("peer")) {
+					String newPeer = newMessage.replace("peer", "");
+					snippets = peer.snips;
+					nextSnipTimestamp = peer.nextTimeStamp;
+					if(newPeer != null) {
+						addToPeersReceived(newPeer);
+						if(!currentPeerList.contains(newPeer)) {
+							currentPeerList.add(newPeer);
+						}
+						long time = new Timestamp(System.currentTimeMillis()).getTime()/1000;
+						locationAndTime.put(newPeer,time);
+					}
 				}
-				long time = new Timestamp(System.currentTimeMillis()).getTime()/1000;
-				locationAndTime.put(newPeer,time);
+				else {
+					String newlocation=peer.getLocation();
+					int timestamp=Integer.parseInt(newMessage.replace("ack", ""));
+					ArrayList<String> newlist=notResponseToSnip.get(timestamp);
+					if(newlist!=null&&newlist.contains(newlocation)) {
+						newlist.remove(newlocation);
+						notResponseToSnip.put(timestamp, newlist);
+					}
+					
+					
+				}
 			}
+			
+			
 		} catch (SocketTimeoutException e) {
 			// TODO Auto-generated catch block
 			
@@ -429,17 +455,19 @@ public class Client{
 					input = input.substring(0, maxSnipLength);
 				}
 				try {
+					nextSnipTimestamp=peer.nextTimeStamp;
 					String snip = nextSnipTimestamp +" "+ input + " ";
 					// peerSent += snip + "\n";
 					if(snippets != null) {
 						snippets += snip ;
-						
 					}else {
 						snippets = snip ;
 						
 					}
-					peer.sendInfo("snip"+ snip);
-					
+					latestSnip="snip"+ snip;
+					peer.sendInfo(latestSnip,peer.activePeerList);
+					//notResponseToSnip.put(nextSnipTimestamp, peer.activePeerList);
+					//(new Thread(deleteInactivePeer)).start();
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -448,6 +476,39 @@ public class Client{
 			keyboard.close();
 		}
 	});
+	
+//	static Runnable deleteInactivePeer=()->{
+//		
+//	};
+	
+	static Runnable deleteInactivePeer = ()-> {
+			Thread.currentThread().setName(String.valueOf(nextSnipTimestamp));
+			int count=0;
+			ArrayList<String> inactiveList=notResponseToSnip.get(Integer.parseInt(Thread.currentThread().getName()));
+			try {
+				while(!Thread.currentThread().isInterrupted()&&!inactiveList.isEmpty()&&!peer.stop&&count<3) {
+					Thread.sleep(10000);
+					try {
+						inactiveList=notResponseToSnip.get(Integer.parseInt(Thread.currentThread().getName()));
+						if(!inactiveList.isEmpty()) {
+							peer.sendInfo(latestSnip, inactiveList);
+						}
+						
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					count++;
+				}
+				peer.removePeerFromActivePeerList(inactiveList);
+				
+			}
+			catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				System.out.println("Thread is interupted");
+			}
+		
+	};
 	
 	// Check if a peer is active or not. If a peer does not send their peer info for more than 4 mins, then remove it from the active peer list
 	static Thread checkActivePeerThread = new Thread(new Runnable() {
