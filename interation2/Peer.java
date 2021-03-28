@@ -2,6 +2,8 @@ package interation2;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Arrays;
+
 
 /*
 Key functions:
@@ -36,6 +38,7 @@ public class Peer {
 	String message;
 	String teamName;
 	int nextTimeStamp;
+	String catchUpSnip="";
 	
 	// This method will setup a UDP socket and store the port number of UDP
 	public void setUpUDPserver() throws SocketException {
@@ -103,9 +106,18 @@ public class Peer {
 			if(snips!=null&&peer!=getMyLocation()) {
 				InetAddress ip=InetAddress.getByName(peer.split(":")[0]);
 				int port=Integer.parseInt(peer.split(":")[1]);
-				sendMessage("historyOfSnippets "+snips,ip,port);
+				System.out.println(catchUpMessages());
+				sendMessage(catchUpMessages(),ip,port);
 			}
 		}	
+	}
+	
+	public String catchUpMessages() throws UnknownHostException {
+		String mes="ctch";
+		mes+=getMyLocation()+" ";
+		mes+=(nextTimeStamp--)+" ";
+		mes+=catchUpSnip;
+		return mes;
 	}
 	
 	// Set active peer list
@@ -128,46 +140,19 @@ public class Peer {
 			sendMessage(message, ip, port);
 		}
 	}
-//	public String getMessage() throws IOException {
-//		message=receiveMessage();
-//		// System.out.println("Messaged received: " + message);
-//		if(message.startsWith("stop")) {
-//			sendInfo("stop",activePeerList);
-//			setStop();
-//			System.out.println("receive stop message");
-//		}
-//		else if(message.startsWith("snip")) {
-//			String newsnip=message.replace("snip", "");
-//			if(snips==null){
-//				snips=message.replace("snip", "")+getLocation()+"\n";
-//			}else{
-//				snips+=message.replace("snip", "")+getLocation()+"\n";
-//			}
-//		
-//			if(!snips.isEmpty()) {
-//				System.out.print(snips);
-//				// System.out.println(newsnip);
-//				String[] snipArray=newsnip.split("\n");
-//				nextTimeStamp=Integer.parseInt(snipArray[snipArray.length-1].split(" ")[0])+1;
-//			}
-//
-//		}
-//		else if(message.startsWith("peer")){
-//			String peer=message.replace("peer", "");
-//			addActivePeer(peer);
-//			System.out.println("Peer added   "+peer);
-//			return message;
-//		}
-//		else if(message.startsWith("historyOfSnippets ")) {
-//			snips=message.replace("historyOfSnippets ", "");
-//			if(!snips.isEmpty()) {
-//				
-//				String[] snipArray=snips.split("\n");
-//				nextTimeStamp=Integer.parseInt(snipArray[snipArray.length-1].split(" ")[0])+1;
-//			}
-//		}
-//		return null;
-//}
+
+	public Boolean isNewMessage(int receivedTimestamp) {
+		return receivedTimestamp>=nextTimeStamp;
+	}
+	
+	public String arrayToString(String[] array) {
+		String result="";
+		
+		for(String element:array) {
+			result+=element+" ";
+		}
+		return result;
+	}
 	
 	// When a peer recieves a UDP, act accordingly based on if it is a snip, stop, or peer message
 	public String getMessage() throws IOException {
@@ -183,18 +168,20 @@ public class Peer {
 				System.out.println("send  "+response+"  to "+getLocation());
 			}
 			else if(message.startsWith("snip")) {
-				
-				
 					String newsnip=message.replace("snip", "");
-					if(snips==null){
-						snips=newsnip+getLocation()+"\n";
-					}else{
-						snips+=newsnip+getLocation()+"\n";
-					}
-					System.out.print(snips);
 					String[] snipArray=newsnip.split("\n");
-					nextTimeStamp=Integer.parseInt(snipArray[snipArray.length-1].split(" ")[0])+1;
-					sendMessage("ack"+(nextTimeStamp-1),InetAddress.getByName(getLocation().split(":")[0]),Integer.parseInt(getLocation().split(":")[1]));
+					int receivedTimestamp=Integer.parseInt(snipArray[snipArray.length-1].split(" ")[0]);
+					if(isNewMessage(receivedTimestamp)) {
+						catchUpSnip+=message.replace("snip", "")+"\n";
+						if(snips==null){
+							snips=newsnip+getLocation()+"\n";
+						}else{
+							snips+=newsnip+getLocation()+"\n";
+						}
+						nextTimeStamp=receivedTimestamp+1;
+					}
+					System.out.print(snips);				
+					sendMessage("ack "+(nextTimeStamp-1),InetAddress.getByName(getLocation().split(":")[0]),Integer.parseInt(getLocation().split(":")[1]));
 				}
 				
 
@@ -208,13 +195,19 @@ public class Peer {
 			else if(message.startsWith("ack")) {
 				return message;
 			}
-			else if(message.startsWith("historyOfSnippets ")) {
-				snips=message.replace("historyOfSnippets ", "");
-				if(!snips.isEmpty()) {
+			else if(message.startsWith("ctch")) {
+				message=message.replace("ctch", "");
+				String originalSender=message.split(" ")[0];
+				int receivedTimestamp=Integer.parseInt(message.split(" ")[1]);
+				if(isNewMessage(receivedTimestamp)) {
+					nextTimeStamp=receivedTimestamp++;
+					String[] strarray = Arrays.copyOfRange(message.split(" "), 2, message.split(" ").length);
 					
-					String[] snipArray=snips.split("\n");
-					nextTimeStamp=Integer.parseInt(snipArray[snipArray.length-1].split(" ")[0])+1;
+					snips=arrayToString(strarray);
+					System.out.println(snips);
 				}
+				
+				
 			}
 			return null;
 	}
