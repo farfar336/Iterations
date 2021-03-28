@@ -25,6 +25,7 @@ public class Peer {
 	public byte[] inbuf = new byte[10000];
 	public byte[] outbuf = new byte[10000];
 	public ArrayList<String> activePeerList = new ArrayList<String>();
+	public ArrayList<String> inactivePeerList = new ArrayList<String>();
 	public DatagramPacket UDPinPacket = new DatagramPacket(inbuf,inbuf.length);
 	public DatagramPacket UDPoutPacket;
 	public DatagramSocket UDPserver;
@@ -33,6 +34,7 @@ public class Peer {
 	long startSnip;
 	String snips;
 	String message;
+	String teamName;
 	int nextTimeStamp;
 	
 	// This method will setup a UDP socket and store the port number of UDP
@@ -71,7 +73,6 @@ public class Peer {
 		String address = UDPinPacket.getAddress().toString().replace("/","");
 		int port = UDPinPacket.getPort();
 		String location = address + ":" + port;
-		UDPinPacket = new DatagramPacket(inbuf,inbuf.length);
 		return location;
 	}
 	
@@ -99,7 +100,7 @@ public class Peer {
 		peer=peer.replace("/", "");
 		if(!activePeerList.contains(peer)) {
 			activePeerList.add(peer);
-			if(snips!=null) {
+			if(snips!=null&&peer!=getMyLocation()) {
 				InetAddress ip=InetAddress.getByName(peer.split(":")[0]);
 				int port=Integer.parseInt(peer.split(":")[1]);
 				sendMessage("historyOfSnippets "+snips,ip,port);
@@ -120,44 +121,92 @@ public class Peer {
 	}
 
 	// Send info to other server
-	public void sendInfo(String message) throws IOException {
-		for(int i = 0; i < activePeerList.size(); i++) {
-			InetAddress ip = InetAddress.getByName(activePeerList.get(i).split(":")[0]);
-			int port = Integer.parseInt(activePeerList.get(i).split(":")[1]);
+	public void sendInfo(String message,ArrayList<String> list) throws IOException {
+		for(int i = 0; i < list.size(); i++) {
+			InetAddress ip = InetAddress.getByName(list.get(i).split(":")[0]);
+			int port = Integer.parseInt(list.get(i).split(":")[1]);
 			sendMessage(message, ip, port);
 		}
 	}
+//	public String getMessage() throws IOException {
+//		message=receiveMessage();
+//		// System.out.println("Messaged received: " + message);
+//		if(message.startsWith("stop")) {
+//			sendInfo("stop",activePeerList);
+//			setStop();
+//			System.out.println("receive stop message");
+//		}
+//		else if(message.startsWith("snip")) {
+//			String newsnip=message.replace("snip", "");
+//			if(snips==null){
+//				snips=message.replace("snip", "")+getLocation()+"\n";
+//			}else{
+//				snips+=message.replace("snip", "")+getLocation()+"\n";
+//			}
+//		
+//			if(!snips.isEmpty()) {
+//				System.out.print(snips);
+//				// System.out.println(newsnip);
+//				String[] snipArray=newsnip.split("\n");
+//				nextTimeStamp=Integer.parseInt(snipArray[snipArray.length-1].split(" ")[0])+1;
+//			}
+//
+//		}
+//		else if(message.startsWith("peer")){
+//			String peer=message.replace("peer", "");
+//			addActivePeer(peer);
+//			System.out.println("Peer added   "+peer);
+//			return message;
+//		}
+//		else if(message.startsWith("historyOfSnippets ")) {
+//			snips=message.replace("historyOfSnippets ", "");
+//			if(!snips.isEmpty()) {
+//				
+//				String[] snipArray=snips.split("\n");
+//				nextTimeStamp=Integer.parseInt(snipArray[snipArray.length-1].split(" ")[0])+1;
+//			}
+//		}
+//		return null;
+//}
 	
 	// When a peer recieves a UDP, act accordingly based on if it is a snip, stop, or peer message
 	public String getMessage() throws IOException {
 			message=receiveMessage();
 			// System.out.println("Messaged received: " + message);
 			if(message.startsWith("stop")) {
-				sendInfo("stop");
+				sendInfo("stop",activePeerList);
+				InetAddress ip=InetAddress.getByName(getLocation().split(":")[0]);
+				int port=Integer.parseInt(getLocation().split(":")[1]);
+				String response="ack"+teamName;
+				sendMessage(response,ip,port);
 				setStop();
-				System.out.println("receive stop message");
+				System.out.println("send  "+response+"  to "+getLocation());
 			}
 			else if(message.startsWith("snip")) {
-				String newsnip=message.replace("snip", "");
-				if(snips==null){
-					snips=message.replace("snip", "")+getLocation()+"\n";
-				}else{
-					snips+=message.replace("snip", "")+getLocation()+"\n";
-				}
-			
-				if(!snips.isEmpty()) {
+				
+				
+					String newsnip=message.replace("snip", "");
+					if(snips==null){
+						snips=newsnip+getLocation()+"\n";
+					}else{
+						snips+=newsnip+getLocation()+"\n";
+					}
 					System.out.print(snips);
-					// System.out.println(newsnip);
 					String[] snipArray=newsnip.split("\n");
 					nextTimeStamp=Integer.parseInt(snipArray[snipArray.length-1].split(" ")[0])+1;
+					sendMessage("ack"+(nextTimeStamp-1),InetAddress.getByName(getLocation().split(":")[0]),Integer.parseInt(getLocation().split(":")[1]));
 				}
+				
 
-			}
+			
 			else if(message.startsWith("peer")){
 				String peer=message.replace("peer", "");
 				addActivePeer(peer);
 				System.out.println("Peer added   "+peer);
-				return peer;
+				return message;
+			}
+			else if(message.startsWith("ack")) {
+				return message;
 			}
 			else if(message.startsWith("historyOfSnippets ")) {
 				snips=message.replace("historyOfSnippets ", "");
@@ -175,13 +224,16 @@ public class Peer {
 			activePeerList.remove(activePeerList.indexOf(peer));
 		}
 	}
+	public void removePeerFromActivePeerList(ArrayList<String> inactivePeerList) {
+		activePeerList.removeAll(inactivePeerList);
+	}
 	
 	// Send peer information
 	public void sendPeer() throws InterruptedException, IOException {
 		if(activePeerList.size() > 0) {
 			String ip = InetAddress.getByName(InetAddress.getLocalHost().toString().split("/")[1]).toString();
 			String message = "peer" + ip.replace("/", "") + ":" + getPort();
-			sendInfo(message);
+			sendInfo(message,activePeerList);
 		}
 	}
 }
