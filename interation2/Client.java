@@ -37,6 +37,7 @@ package interation2;
 			-Friday March 26 between 1pm and 2pm, or
 			-Wednesday March 31 between 11am and 11:30 am, or
 			-Wednesday March 31 between 12:30pm and 1:30 pm.
+			-Submit the require and optional feature on port: 55921 and 12955 respectively
 */
 
 /*
