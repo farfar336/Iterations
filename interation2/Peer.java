@@ -222,6 +222,7 @@ public class Peer {
 				return message;
 			}
 			else if(message.startsWith("ctch")) {
+				
 				handleCatchUpMessage(message);
 			}
 			return null;
@@ -254,7 +255,9 @@ public class Peer {
 		message=message.replace("ctch", "");
 		String originalSender=message.split(" ")[0];
 		int receivedTimestamp=Integer.parseInt(message.split(" ")[1]);
+		nextTimeStamp=receivedTimestamp+1;
 		String snippet = message.split(" ")[2];
+
 		TimestampAndSnippet.put(receivedTimestamp, snippet+" "+originalSender);
 		snips=getSnipsFromHashmap();
 		System.out.println(snips);
@@ -268,6 +271,7 @@ public class Peer {
 		for(Object key:keys) {
 			result+=key+" "+TimestampAndSnippet.get(key)+"\n";
 		}
+		
 		return result;
 	}
 	

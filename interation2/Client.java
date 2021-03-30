@@ -394,7 +394,7 @@ public class Client{
 	}
 
 	// Handle the logic for a when peer receives a message
-	public static void receiveMessage() {
+	public static void receiveMessage()  {
 		try {
 			String newMessage=peer.getMessage();
 			if(newMessage!=null) {
@@ -452,20 +452,22 @@ public class Client{
 					input = input.substring(0, maxSnipLength);
 				}
 				try {
+					
 					nextSnipTimestamp=peer.nextTimeStamp;
 					String snip = nextSnipTimestamp +" "+ input + " ";
+					
 					if(snippets != null) {
 						snippets += snip ;
 					}else {
 						snippets = snip ;
 					}
 					latestSnip="snip"+ snip;
-	
 					ArrayList<String> list=peer.activePeerList;
 					(new Thread(deleteInactivePeer)).start();
 					Thread.currentThread().sleep(10);
 					//System.out.println("sending "+latestSnip);
 					peer.sendInfo(latestSnip,list);
+					
 		
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
