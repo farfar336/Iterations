@@ -30,18 +30,15 @@ public class Peer {
 	public byte[] inbuf = new byte[10000];
 	public byte[] outbuf = new byte[10000];
 	public volatile ArrayList<String> activePeerList = new ArrayList<String>();
-	public ArrayList<String> inactivePeerList = new ArrayList<String>();
 	public DatagramPacket UDPinPacket = new DatagramPacket(inbuf,inbuf.length);
 	public DatagramPacket UDPoutPacket;
 	public DatagramSocket UDPserver;
 	public int UDPport;
 	public Boolean stop = false;
-	long startSnip;
 	String snips;
 	String message;
 	String teamName;
 	int nextTimeStamp;
-	String catchUpSnip="";
 	ConcurrentHashMap<Integer,ArrayList<String>> responseToSnip=new ConcurrentHashMap<Integer,ArrayList<String>>();
 	HashMap<Integer, String> TimestampAndSnippet=new HashMap<Integer, String>();
 	// This method will setup a UDP socket and store the port number of UDP
@@ -231,20 +228,17 @@ public class Peer {
 	// Remove a peer from active peer list 
 	
 	public void removePeerFromActivePeerList(String peer) {
-		final Iterator<String> ite=activePeerList.iterator();
-		while(ite.hasNext()) {
-			if(peer==ite.next()) {
-				ite.remove();
-			}
+		if(activePeerList.contains(peer)) {
+			activePeerList.remove(activePeerList.indexOf(peer));
 		}
-//		if(activePeerList.contains(peer)) {
-//			activePeerList.remove(activePeerList.indexOf(peer));
-//		}
+		System.out.println("current list"+activePeerList);
+
 	}
 	public void removePeerFromActivePeerList(ArrayList<String> inactivePeerList) {
 		if(inactivePeerList!=null) {
 			activePeerList.removeAll(inactivePeerList);
 		}
+		System.out.println("current list"+activePeerList);
 	}
 	
 	/*
