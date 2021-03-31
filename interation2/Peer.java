@@ -226,9 +226,10 @@ public class Peer {
 			 * 
 			 */
 			else if(message.startsWith("ack")) {
-				System.out.println(message);
+				
 				int receivedTimestamp=Integer.parseInt(message.split(" ")[1]);
-				ackMessage+=receivedTimestamp+" "+getLocation()+"\r\n";
+				ackMessage+=receivedTimestamp+"  "+getLocation()+"\r\n";
+				System.out.println(message+"  "+getLocation());
 				numberofAck++;
 				ArrayList <String>currentList =responseToSnip.get(receivedTimestamp);
 				if(currentList!=null) {
@@ -243,7 +244,7 @@ public class Peer {
 				}
 				
 				
-				return message;
+				
 			}
 			else if(message.startsWith("ctch")) {
 				

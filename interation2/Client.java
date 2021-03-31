@@ -103,7 +103,7 @@ public class Client{
 	public static final int inactiveTimeLimit=240;
 	
 	//threadLocal allow us to create a local variable in the thread.
-	public static ThreadLocal<String> myThreadLocal = new ThreadLocal<String>();
+	public static ThreadLocal<LocalThreadVariable> myThreadLocal = new ThreadLocal<LocalThreadVariable>();
 
 	// this is a hashmap that stores location and time
 	// location is the other peer's location
@@ -518,31 +518,37 @@ public class Client{
 	});
 	
 	/*
+	 * Use ThreadConfinement to implement
 	 * Threadlocal allows a thread to create a local variable for the thread.
 	 * a thread could only get and set it's own local variable.
 	 * threadlocal.get() will return the variable, threadlocal.set() will set the variable
-	 * we stored the snippet as the local variable, such that we can working on different snippet
-	 * the name of the snippet is the timestamp of the snippet. such that we do not have to create one more hashmap
+	 * LocalThreadVariable will store the current peers in the system, the timestamp we are working on and the
+	 * snippet.
+	 * Clone the value of the peerList in the Peer, such that we do not pass by value of reference
+	 * 
 	 * 
 	 * thread will sleep for 10 seconds , and then send the snippets to the peers that do not send ack message
 	 * 
 	 */
 	static Runnable deleteInactivePeer = ()-> {
-			myThreadLocal.set(latestSnip);
-			Thread.currentThread().setName(String.valueOf(nextSnipTimestamp));
+			//avoid passing by the value of reference
+			ArrayList <String> workingList=(ArrayList<String>) peer.activePeerList.clone();
+			LocalThreadVariable v=new LocalThreadVariable(nextSnipTimestamp,latestSnip,workingList);
+			myThreadLocal.set(v);
+//			Thread.currentThread().setName(String.valueOf(nextSnipTimestamp));
 			int count=0;
 			ArrayList<String> activeList = null;
 			try {
 				while(!Thread.currentThread().isInterrupted()&&!peer.stop&&count<3) {
 					Thread.sleep(10000);
 					try {
-						activeList=peer.responseToSnip.get(Integer.parseInt(Thread.currentThread().getName()));
-						for(String aPeer:peer.activePeerList) {
+						activeList=peer.responseToSnip.get(myThreadLocal.get().getTimestamp());
+						for(String aPeer:myThreadLocal.get().getCurrentList()) {
 							if(activeList!=null&&!activeList.contains(aPeer)) {
 								InetAddress ip=InetAddress.getByName(aPeer.split(":")[0]);
 								int port=Integer.parseInt(aPeer.split(":")[1]);
 								System.out.println("Round "+count+" try to send snippet to "+aPeer);
-								peer.sendMessage(myThreadLocal.get(), ip, port);
+								peer.sendMessage(myThreadLocal.get().getWorkingSnippet(), ip, port);
 							}
 						}
 						
@@ -552,8 +558,8 @@ public class Client{
 				}
 					count++;
 				}
-				activeList=peer.responseToSnip.get(Integer.parseInt(Thread.currentThread().getName()));
-				for(String aPeer:peer.activePeerList) {
+				activeList=peer.responseToSnip.get(myThreadLocal.get().getTimestamp());
+				for(String aPeer:myThreadLocal.get().getCurrentList()) {
 					if(activeList!=null&&!activeList.contains(aPeer)) {
 						System.out.println(aPeer+" did not sent ack,it has been removed");
 						missingAckPeers.add(aPeer);
