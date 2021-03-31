@@ -177,6 +177,37 @@ public class Client{
 	}
 	
 	// Gets a list of peers and return it in string format
+	public static String arrayToStringWithAliveness(ArrayList<String> peersArray){
+		String peers = "";
+		for (int i = 0; i < peersArray.size();i++) {
+			String currentPeer=peersArray.get(i);
+			if (i == 0){ //Don't add \n to the first entry
+				peers += peersArray.get(i); 
+				if(missingAckPeers.contains(currentPeer)) {
+					peers+="      "+"missing_ack";
+				}
+				else if(silentPeers.contains(currentPeer)) {
+					peers+="      "+"silent";
+				}
+				else {
+					peers+="      "+"alive";
+				}
+			}
+			else{ //Add to the other entries
+				peers += "\n" + peersArray.get(i);
+				if(missingAckPeers.contains(currentPeer)) {
+					peers+="      "+"missing_ack";
+				}
+				else if(silentPeers.contains(currentPeer)) {
+					peers+="      "+"silent";
+				}
+				else {
+					peers+="      "+"alive";
+				}
+			}
+		}
+		return peers;
+	}
 	public static String arrayToString(ArrayList<String> peersArray){
 		String peers = "";
 		for (int i = 0; i < peersArray.size();i++) {
@@ -184,7 +215,7 @@ public class Client{
 				peers += peersArray.get(i); 
 			}
 			else{ //Add to the other entries
-				peers += "\n" + peersArray.get(i);
+				peers += "\n" + peersArray.get(i);			
 			}
 		}
 		return peers;
@@ -211,16 +242,17 @@ public class Client{
 	// Get the report 
 	public static String getReport(){
 		// Prepare variables
+		String ackMessage=peer.ackMessage;
+		
 		int totalPeersFromRegistry = peerListRegistry.size();
 		String peersFromRegistry = arrayToString(peerListRegistry);
 		Date aDate = new Date();
 		String reportDateReceived = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(aDate);
 		int totalCurrentPeers = currentPeerList.size(); 
-		String currentPeerListString = arrayToString(currentPeerList);
+		String currentPeerListString = arrayToStringWithAliveness(currentPeerList);
 		int numberOfPeersReceived = countLines(peersReceived);
 		int numberOfPeersSent = countLines(peersSent);
-		int numberOfSnippets = countLines(snippets);
-		//snippets = removeLastLine(snippets);
+		int numberOfSnippets = countLines(peer.snips);
 
 		// Format report
 		String report = 
@@ -236,9 +268,14 @@ public class Client{
 		numberOfPeersSent + "\n" +
 		peersSent +
 		numberOfSnippets + "\n" +
-		snippets;
+		peer.snips
+		+
+		peer.numberofAck+"\n"+
+		ackMessage
+		;
+		
 
-		//System.out.println("start of report \n" + report + "end of report");
+		System.out.println("start of report \n" + report + "end of report");
 		return report;
 	}
 

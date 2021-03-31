@@ -39,6 +39,8 @@ public class Peer {
 	String message;
 	String teamName;
 	int nextTimeStamp;
+	int numberofAck=0;
+	String ackMessage="";
 	ConcurrentHashMap<Integer,ArrayList<String>> responseToSnip=new ConcurrentHashMap<Integer,ArrayList<String>>();
 	HashMap<Integer, String> TimestampAndSnippet=new HashMap<Integer, String>();
 	// This method will setup a UDP socket and store the port number of UDP
@@ -122,6 +124,21 @@ public class Peer {
 	 * the format for every line is  
 	 * "ctch"<Original Sender>+Space+<timestamp>+space+<content>
 	 */
+//	public String getCatchUpMessages() throws UnknownHostException {
+//		String mes="";
+//		String[] snippetArray=snips.split("\n");
+//		for(String line:snippetArray) {
+//			mes+="ctch";
+//			String[] temp=line.split(" ");
+//			int timestamp=Integer.parseInt(temp[0]);
+//			String content=temp[1];
+//			String originalSender=temp[temp.length-1];
+//			mes+=originalSender+" ";
+//			mes+=timestamp+" ";
+//			mes+=content+"\n";
+//		}
+//		return mes;
+//	}
 	public String getCatchUpMessages() throws UnknownHostException {
 		String mes="";
 		String[] snippetArray=snips.split("\n");
@@ -129,8 +146,10 @@ public class Peer {
 			mes+="ctch";
 			String[] temp=line.split(" ");
 			int timestamp=Integer.parseInt(temp[0]);
-			String content=temp[1];
-			String originalSender=temp[2];
+			
+			String originalSender=temp[temp.length-1];
+			String content=line.replace(originalSender, "");
+			content=content.replace(timestamp+" ", "");
 			mes+=originalSender+" ";
 			mes+=timestamp+" ";
 			mes+=content+"\n";
@@ -177,7 +196,12 @@ public class Peer {
 					String[] snipArray=newsnip.split("\n");
 					int receivedTimestamp=Integer.parseInt(snipArray[snipArray.length-1].split(" ")[0]);
 					String sender=getLocation();
-					String content=snipArray[snipArray.length-1].split(" ")[1];
+					//String content=snipArray[snipArray.length-1].split(" ")[1];
+					String[] snippetArray=snipArray[snipArray.length-1].split(" ");
+					String content = "";
+					for(int i=1;i<snippetArray.length;i++) {
+						content+=snippetArray[i]+" ";
+					}
 					if(!TimestampAndSnippet.containsKey(receivedTimestamp)) {
 						nextTimeStamp=receivedTimestamp+1;
 						TimestampAndSnippet.put(receivedTimestamp, content+" "+sender);
@@ -203,6 +227,8 @@ public class Peer {
 			 */
 			else if(message.startsWith("ack")) {
 				int receivedTimestamp=Integer.parseInt(message.split(" ")[1]);
+				ackMessage+=receivedTimestamp+" "+getLocation()+"\r\n";
+				numberofAck++;
 				ArrayList <String>currentList =responseToSnip.get(receivedTimestamp);
 				if(currentList!=null) {
 					if(!currentList.contains(getLocation())) {
@@ -249,8 +275,11 @@ public class Peer {
 		message=message.replace("ctch", "");
 		String originalSender=message.split(" ")[0];
 		int receivedTimestamp=Integer.parseInt(message.split(" ")[1]);
-		String snippet = message.split(" ")[2];
-
+		String[] snippetArray=message.split(" ");
+		String snippet = "";
+		for(int i=2;i<snippetArray.length;i++) {
+			snippet+=snippetArray[i]+" ";
+		}
 		TimestampAndSnippet.put(receivedTimestamp, snippet+" "+originalSender);
 		snips=getSnipsFromHashmap();
 		if(receivedTimestamp>nextTimeStamp-1) {
