@@ -41,6 +41,11 @@ package interation2;
 */
 
 /*
+	To do:
+		-In iteration3, check that both output files have the correct content from the server
+
+	To run, enter this in command line: java interation2/Client 136.159.5.22 55921 "Xudong Farrukh"
+
  	Code documentation
 	-Functional programming is used
 	-General flow of code: Command line arguements are read to initalize variables. Then it connects the client to the registry 
@@ -136,7 +141,7 @@ public class Client{
 	// Read the source code
 	public static String readSourceCode(){
 		String sourceCode = "";
-		String Path = "interation2"; //Change this to match your path
+		String Path = "interation2";
 		try {
 			File file = new File(Path, "sourceCode.txt");
 			Scanner myReader = new Scanner(file);
@@ -294,10 +299,41 @@ public class Client{
 		System.out.println(teamName + " - Finished request");
 	}
 
+	// Puts a string into a file
+	public static void putStringIntoFile(String aString, String fileName) throws FileNotFoundException{
+		try (PrintWriter out = new PrintWriter(fileName);) {
+			out.println(aString);
+		}
+	}
+
+	// Recieves the code from the server and puts it into a file
+	public static void getCodeFromServer(BufferedReader reader) throws IOException {
+		String code = "";
+		String line;
+
+		while ((line = reader.readLine()) != null) {
+			code += line + "\n";
+		}
+		putStringIntoFile(code, "codeFromServer.txt");
+	}
+
+	// Recieves the report from the server and puts it into a file
+	public static void getReportFromServer(BufferedReader reader) throws IOException {
+		String report = "";
+		String line;
+
+		while ((line = reader.readLine()) != null) {
+			report += line + "\n";
+		}
+		putStringIntoFile(report, "reportFromServer.txt");
+	}
+
 	// Process requests from the server
 	public static void processRequests() throws IOException{
 		String request;
-		while (!(request = reader.readLine()).startsWith("close")) {
+		boolean stopRequests = false;
+		while (stopRequests == false) {
+			request = reader.readLine();
 			System.out.println(teamName + " - Request received: " + request);
 			switch(request) {
 			case "get team name":
@@ -314,6 +350,11 @@ public class Client{
 				break;
 			case "get location":
 				locationRequest(clientSocket);
+				break;
+			case "close":
+				getCodeFromServer(reader);
+				getReportFromServer(reader);
+				stopRequests = true;
 				break;
 			}
 		}
