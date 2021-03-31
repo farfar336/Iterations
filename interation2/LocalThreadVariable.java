@@ -2,7 +2,7 @@ package interation2;
 
 import java.util.ArrayList;
 /*
- * this class will store the local variable that we are going to use
+ * This class will store the local variable that we are going to use for threads
  */
 public class LocalThreadVariable {
 	private int timestamp;
@@ -14,12 +14,15 @@ public class LocalThreadVariable {
 		workingSnippet=s;
 		currentList=list;
 	}
+
 	public int getTimestamp() {
 		return this.timestamp;
 	}
+
 	public String getWorkingSnippet() {
 		return this.workingSnippet;
 	}
+	
 	public ArrayList<String> getCurrentList(){
 		return this.currentList;
 	}

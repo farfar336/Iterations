@@ -1,46 +1,336 @@
+Wed Mar 31 17:47:22 MDT 2021
+java
 package interation2;
+import java.io.*;
+import java.net.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
+
+
+/*
+Key functions:
+	-setUpUDPserver: This method will setup a UDP socket and store the port number of UDP
+	-receiveMessage: Receive the message from other UDP
+	-getMyLocation: Get the location of our peer
+	-getPeerLocation: Get the location of a peer
+	-getPort: Get the port number of this UDP server
+	-getAddress: Get the IP address of the UDP server
+	-sendMessage: Send message to other UDP server
+	-addActivePeer: Add peer to active peerlist
+	-setActivePeerList: Set active peer list
+	-setStop: If we receive a stop, then close the UDP
+	-sendInfo: Send info to other server
+	-getMessage: When a peer recieves a UDP, act accordingly based on if it is a snip, stop, or peer message
+	-removePeerFromActivePeerList: Remove a peer from active peer list
+	-sendPeer: Send peer information
+*/
+
+public class Peer {
+	public byte[] inbuf = new byte[10000];
+	public byte[] outbuf = new byte[10000];
+	public volatile ArrayList<String> activePeerList = new ArrayList<String>();
+	public DatagramPacket UDPinPacket = new DatagramPacket(inbuf,inbuf.length);
+	public DatagramPacket UDPoutPacket;
+	public DatagramSocket UDPserver;
+	public int UDPport;
+	public Boolean stop = false;
+	String snips;
+	String message;
+	String teamName;
+	int nextTimeStamp;
+	ConcurrentHashMap<Integer,ArrayList<String>> responseToSnip=new ConcurrentHashMap<Integer,ArrayList<String>>();
+	HashMap<Integer, String> TimestampAndSnippet=new HashMap<Integer, String>();
+	// This method will setup a UDP socket and store the port number of UDP
+	public void setUpUDPserver() throws SocketException {
+		UDPserver = new DatagramSocket();
+		UDPserver.setSoTimeout(5000);
+		UDPport = UDPserver.getLocalPort();
+	}
+	// Receive the message from other UDP
+	public String receiveMessage() throws IOException {
+		UDPserver.receive(UDPinPacket);
+		String message = new String(UDPinPacket.getData(),0,UDPinPacket.getLength());
+		return message;
+	}
+
+	// Get the location of our peer
+	public String getMyLocation() throws UnknownHostException {
+		String IP = String.valueOf(getAddress());
+		IP = IP.replace("/",""); //Remove the / at the beginning
+		String port = String.valueOf(UDPport);
+		String location = IP + ":" + port;
+		return location;
+	}
+
+	// Get the location of a peer
+	public String getPeerLocation(String peer) throws UnknownHostException {
+		String IP = String.valueOf(InetAddress.getByName(peer.split(":")[0]));
+		IP = IP.replace("/",""); //Remove the / at the beginning
+		String port = String.valueOf(Integer.parseInt(peer.split(":")[1]));
+		String location = IP + ":" + port;
+		return location;
+	}
+
+	//Gets the location of the peer
+	public String getLocation() {
+		String address = UDPinPacket.getAddress().toString().replace("/","");
+		int port = UDPinPacket.getPort();
+		String location = address + ":" + port;
+		return location;
+	}
+	
+	// Get the port number of this UDP server
+	public int getPort() {
+		return UDPport;
+	}
+	
+	// Get the IP address of the UDP server
+	public InetAddress getAddress() throws UnknownHostException {
+		//return InetAddress.getByName("localhost");
+		return InetAddress.getByName(InetAddress.getLocalHost().toString().split("/")[1]);
+	}
+	
+	// Send message to other UDP server
+	public void sendMessage(String message,InetAddress IP, int port) throws IOException {
+		outbuf = message.getBytes();
+		UDPoutPacket = new DatagramPacket(outbuf,outbuf.length,IP,port);
+		UDPserver.send(UDPoutPacket);
+	}
+	
+	// Add peer to active peerlist
+	//if this peer is a new peer, and there is a snippet history, send this peer with the history of snippets
+	public void addActivePeer(String peer) throws IOException {
+		peer=peer.replace("/", "");
+		if(!activePeerList.contains(peer)) {
+			activePeerList.add(peer);
+			if(snips!=null&&peer!=getMyLocation()) {
+				InetAddress ip=InetAddress.getByName(peer.split(":")[0]);
+				int port=Integer.parseInt(peer.split(":")[1]);
+				System.out.println(getCatchUpMessages());
+				String[] catcuUpMessagesArray=getCatchUpMessages().split("\n");
+				//we send each line at one time
+				for(String line:catcuUpMessagesArray) {
+					sendMessage(line,ip,port);
+				}
+			}
+		}	
+	}
+	
+	/*
+	 * this method is used to form a catch up message
+	 * the format for every line is  
+	 * "ctch"<Original Sender>+Space+<timestamp>+space+<content>
+	 */
+	public String getCatchUpMessages() throws UnknownHostException {
+		String mes="";
+		String[] snippetArray=snips.split("\n");
+		for(String line:snippetArray) {
+			mes+="ctch";
+			String[] temp=line.split(" ");
+			int timestamp=Integer.parseInt(temp[0]);
+			String content=temp[1];
+			String originalSender=temp[2];
+			mes+=originalSender+" ";
+			mes+=timestamp+" ";
+			mes+=content+"\n";
+		}
+		return mes;
+	}
+	
+	// Set active peer list
+	public void setActivePeerList(ArrayList<String> newPeerList) {
+		activePeerList = newPeerList;
+	}
+	
+	// If we receive a stop, then close the UDP
+	public void setStop() {
+		System.out.println("stop UDP");
+		stop = true;
+		UDPserver.close();
+	}
+
+	// Send info to all the other peers
+	public void sendInfo(String message,ArrayList<String> list) throws IOException {
+		for(int i = 0; i < list.size(); i++) {
+			InetAddress ip = InetAddress.getByName(list.get(i).split(":")[0]);
+			int port = Integer.parseInt(list.get(i).split(":")[1]);
+			sendMessage(message, ip, port);
+		}
+	}
+	
+	// When a peer recieves a UDP, act accordingly based on if it is a snip, stop, or peer message
+	public String getMessage() throws IOException {
+			message=receiveMessage();
+			//System.out.println("Messaged received: " + message);
+			if(message.startsWith("stop")) {
+				sendInfo("stop",activePeerList);
+				InetAddress ip=InetAddress.getByName(getLocation().split(":")[0]);
+				int port=Integer.parseInt(getLocation().split(":")[1]);
+				String response="ack"+teamName;
+				sendMessage(response,ip,port);
+				setStop();
+				System.out.println("send  "+response+"  to "+getLocation());
+			}
+			else if(message.startsWith("snip")) {
+					String newsnip=message.replace("snip", "");
+					String[] snipArray=newsnip.split("\n");
+					int receivedTimestamp=Integer.parseInt(snipArray[snipArray.length-1].split(" ")[0]);
+					String sender=getLocation();
+					String content=snipArray[snipArray.length-1].split(" ")[1];
+					if(!TimestampAndSnippet.containsKey(receivedTimestamp)) {
+						nextTimeStamp=receivedTimestamp+1;
+						TimestampAndSnippet.put(receivedTimestamp, content+" "+sender);
+						snips=getSnipsFromHashmap();
+						System.out.print(snips);
+					}
+					//in case the ack message is not received by the sender
+					sendMessage("ack "+receivedTimestamp,InetAddress.getByName(getLocation().split(":")[0]),Integer.parseInt(getLocation().split(":")[1]));
+				}
+				
+
+			
+			else if(message.startsWith("peer")){
+				String peer=message.replace("peer", "");
+				addActivePeer(peer);
+				System.out.println("Peer added   "+peer);
+				return message;
+			}
+			/* If we received a ack, we will update the hashmap(responseToSnip)
+			 * such that we can detect which peer did not send a ack to us
+			 * 
+			 * 
+			 */
+			else if(message.startsWith("ack")) {
+				int receivedTimestamp=Integer.parseInt(message.split(" ")[1]);
+				ArrayList <String>currentList =responseToSnip.get(receivedTimestamp);
+				if(currentList!=null) {
+					if(!currentList.contains(getLocation())) {
+						currentList.add(getLocation());
+						responseToSnip.put(receivedTimestamp, currentList);
+					}
+				}else {
+					currentList=new ArrayList<String>();
+					currentList.add(getLocation());
+					responseToSnip.put(receivedTimestamp, currentList);
+				}
+				
+				
+				return message;
+			}
+			else if(message.startsWith("ctch")) {
+				
+				handleCatchUpMessage(message);
+			}
+			return null;
+	}
+	
+	// Remove a peer from active peer list 
+	
+	public void removePeerFromActivePeerList(String peer) {
+		if(activePeerList.contains(peer)) {
+			activePeerList.remove(activePeerList.indexOf(peer));
+		}
+		System.out.println("current list"+activePeerList);
+
+	}
+	public void removePeerFromActivePeerList(ArrayList<String> inactivePeerList) {
+		if(inactivePeerList!=null) {
+			activePeerList.removeAll(inactivePeerList);
+		}
+		System.out.println("current list"+activePeerList);
+	}
+	
+	/*
+	 * handle the catch up message,because catch up message has different protocol
+	 * put the timestamp and snippet and sender into the hashmap.
+	 */
+	public void handleCatchUpMessage(String message) {
+		message=message.replace("ctch", "");
+		String originalSender=message.split(" ")[0];
+		int receivedTimestamp=Integer.parseInt(message.split(" ")[1]);
+		String snippet = message.split(" ")[2];
+
+		TimestampAndSnippet.put(receivedTimestamp, snippet+" "+originalSender);
+		snips=getSnipsFromHashmap();
+		if(receivedTimestamp>nextTimeStamp-1) {
+			System.out.println(receivedTimestamp+" "+snippet+" "+originalSender);
+			nextTimeStamp=receivedTimestamp+1;
+		}
+		
+	}
+	
+	//read the snippet from the hashmap, in the order of timestamp
+	public String getSnipsFromHashmap() {
+		String result="";
+		Object[] keys = TimestampAndSnippet.keySet().toArray();
+		Arrays.sort(keys);
+		for(Object key:keys) {
+			result+=key+" "+TimestampAndSnippet.get(key)+"\n";
+		}
+		
+		return result;
+	}
+	
+	// Send peer information
+	public void sendPeer() throws InterruptedException, IOException {
+		if(activePeerList.size() > 0) {
+			String ip = InetAddress.getByName(InetAddress.getLocalHost().toString().split("/")[1]).toString();
+			String message = "peer" + ip.replace("/", "") + ":" + getPort();
+			sendInfo(message,activePeerList);
+		}
+	}
+
+}
+
+
+
+
+
+package interation2;
+
 /*
 	To do:
-		-Code documentation [Farrukh]
-			-Remove print statements
-			-Update source code txt file
-			-Check source code prints correctly
-			-Update Code documentation
-			-Add more comments where needed
+		-Required part: code [Xudong]
+			-Look in the iteration 3 pdf, Shutting down system requirements (stop UDP/IP messages)
+
+		-Optional part: code [Xudong] 
+			-Look in the iteration 3 pdf, User interface and snippets requirements (snip UDP/IP messages)
+			-Look in the iteration 3 pdf, Group management requirements (peer UDP/IP messages)
+
+		-Required part: report [Farrukh]
+			-Look in the iteration 3 pdf, Updated report request (stop UDP/IP messages)
+
+		-Optional part: report [Farrukh] 
+			-Look in the iteration 3 pdf, Updated Registry Communication Protocol
 
 		-Fix UDP peer messages in report [Farrukh]
-			-Clarify with professor on what is expected (done)
+			-Clarify with professor on what is expected
 			-Implement changes
 
 		-Class diagram [Farrukh]
 			-Can add stuff on to the diagram from iteration 2
 
+		-Code documentation [Farrukh]
+			-Update Code documentation
+			-Add more comments where needed
+
 		-Video demo (5-10 mins) [Farrukh]
-			-A video that gives a brief explanation of your implementation. Make sure to pay special attention to
-			explaining your implementation of the optional features. The length of your video should be between 5
-			and 10 minutes
+			-A video that gives a brief explanation of your implementation, shows your peer in action, and explains
+			under which circumstances a peer would not receive a stop message, even with the resends in
+			iteration 3.
 
-		-Submitting our work [Farrukh] 
-			-Submit April 15
-			-Submit the optional feature on port 12955
-
-		-Required part: code [Xudong] (done)
-			-Look in the iteration 3 pdf, Shutting down system requirements (stop UDP/IP messages)
-
-		-Optional part: code [Xudong] (done)
-			-Look in the iteration 3 pdf, User interface and snippets requirements (snip UDP/IP messages)
-			-Look in the iteration 3 pdf, Group management requirements (peer UDP/IP messages)
-
-		-Required part: report [Xudong] (done)
-			-Look in the iteration 3 pdf, Updated report request (stop UDP/IP messages)
-
-		-Optional part: report [Xudong] (done)
-			-Look in the iteration 3 pdf, Updated Registry Communication Protocol
+		-Submitting our work [Farrukh]
+			-Friday March 26 between 10am and 10:30 am, or
+			-Friday March 26 between 11:30 and 12:30 am, or
+			-Friday March 26 between 1pm and 2pm, or
+			-Wednesday March 31 between 11am and 11:30 am, or
+			-Wednesday March 31 between 12:30pm and 1:30 pm.
 */
 
 /*
-	To run, enter this in command line: java interation2/Client 136.159.5.22 12955 "Xudong Farrukh"
-
  	Code documentation
 	-Functional programming is used
 	-General flow of code: Command line arguements are read to initalize variables. Then it connects the client to the registry 
@@ -95,20 +385,21 @@ public class Client{
 	public static ArrayList<String> peerListRegistry;
 	public static ArrayList<String> currentPeerList;
 	public static HashMap<String, String> peersHashMap;
-	public static ArrayList<String> missingAckPeers; 	// Contains all the peers that did not send acks to snippets
-	public static ArrayList<String> silentPeers;	// Contains all the peers that did not send a peer message
+	//contain all the peers that does not response(ack message) to snippet
+	public static ArrayList<String> missingAckPeers;
+	//contain all the peers that does not send their peer message.
+	public static ArrayList<String> silentPeers;
 	public static Peer peer;
+	public static Executor executor,executor1,executor2;
+	public static final int inactiveTimeLimit=240;
+	
+	//threadLocal allow us to create a local variable in the thread.
+	public static ThreadLocal<String> myThreadLocal = new ThreadLocal<String>();
 
 	// this is a hashmap that stores location and time
 	// location is the other peer's location
 	// time is the timestamp(in second) that receive the peer info from this peer's location
 	public static ConcurrentHashMap<String,Long> locationAndTime;
-
-	// Variables related to thread
-	public static Executor executor,executor1,executor2;
-	public static final int inactiveTimeLimit=240;
-	public static ThreadLocal<LocalThreadVariable> myThreadLocal = new ThreadLocal<LocalThreadVariable>(); 	//threadLocal allow us to create a local variable in the thread.
-
 	// Variables related to connecting client
 	public static Socket clientSocket;
 	public static BufferedReader reader;
@@ -116,6 +407,7 @@ public class Client{
 	public static String serverIP;
 	public static int serverPort;
 	public static int numberOfSources;
+
 
 	// Variables related to UDP messages
 	public static String peersReceived;
@@ -142,7 +434,7 @@ public class Client{
 	// Read the source code
 	public static String readSourceCode(){
 		String sourceCode = "";
-		String Path = "interation2";
+		String Path = "interation2"; //Change this to match your path
 		try {
 			File file = new File(Path, "sourceCode.txt");
 			Scanner myReader = new Scanner(file);
@@ -176,39 +468,6 @@ public class Client{
 	}
 	
 	// Gets a list of peers and return it in string format
-	public static String arrayToStringWithAliveness(ArrayList<String> peersArray){
-		String peers = "";
-		for (int i = 0; i < peersArray.size();i++) {
-			String currentPeer=peersArray.get(i);
-			if (i == 0){ //Don't add \n to the first entry
-				peers += peersArray.get(i); 
-				if(missingAckPeers.contains(currentPeer)) {
-					peers+="      "+"missing_ack";
-				}
-				else if(silentPeers.contains(currentPeer)) {
-					peers+="      "+"silent";
-				}
-				else {
-					peers+="      "+"alive";
-				}
-			}
-			else{ //Add to the other entries
-				peers += "\n" + peersArray.get(i);
-				if(missingAckPeers.contains(currentPeer)) {
-					peers+="      "+"missing_ack";
-				}
-				else if(silentPeers.contains(currentPeer)) {
-					peers+="      "+"silent";
-				}
-				else {
-					peers+="      "+"alive";
-				}
-			}
-		}
-		return peers;
-	}
-
-	// Stores content of array into a string
 	public static String arrayToString(ArrayList<String> peersArray){
 		String peers = "";
 		for (int i = 0; i < peersArray.size();i++) {
@@ -216,13 +475,13 @@ public class Client{
 				peers += peersArray.get(i); 
 			}
 			else{ //Add to the other entries
-				peers += "\n" + peersArray.get(i);	
+				peers += "\n" + peersArray.get(i);
 			}
 		}
 		return peers;
 	}
 
-	// Returns the number of UDP messages
+	// Returns the number of UDP
 	public static int countLines(String str){
 		if (str != null){
 			String [] lines = str.split("\r\n|\r|\n");
@@ -232,27 +491,27 @@ public class Client{
 			return 0;
 	}
 
-	// public static String  removeLastLine(String str){
-	// 	if(str.lastIndexOf("\n")>0) {
-	// 		return str.substring(0, str.lastIndexOf("\n"));
-	// 	} else {
-	// 		return str;
-	// 	}
-	// }
+	public static String  removeLastLine(String str){
+		if(str.lastIndexOf("\n")>0) {
+			return str.substring(0, str.lastIndexOf("\n"));
+		} else {
+			return str;
+		}
+	}
 
 	// Get the report 
 	public static String getReport(){
 		// Prepare variables
-		String ackMessage=peer.ackMessage;
 		int totalPeersFromRegistry = peerListRegistry.size();
 		String peersFromRegistry = arrayToString(peerListRegistry);
 		Date aDate = new Date();
 		String reportDateReceived = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(aDate);
 		int totalCurrentPeers = currentPeerList.size(); 
-		String currentPeerListString = arrayToStringWithAliveness(currentPeerList);
+		String currentPeerListString = arrayToString(currentPeerList);
 		int numberOfPeersReceived = countLines(peersReceived);
 		int numberOfPeersSent = countLines(peersSent);
-		int numberOfSnippets = countLines(peer.snips);
+		int numberOfSnippets = countLines(snippets);
+		//snippets = removeLastLine(snippets);
 
 		// Format report
 		String report = 
@@ -268,13 +527,9 @@ public class Client{
 		numberOfPeersSent + "\n" +
 		peersSent +
 		numberOfSnippets + "\n" +
-		peer.snips
-		+
-		peer.numberofAck+"\n"+
-		ackMessage
-		;
-		
-		System.out.println("start of report \n" + report + "end of report");
+		snippets;
+
+		//System.out.println("start of report \n" + report + "end of report");
 		return report;
 	}
 
@@ -337,41 +592,10 @@ public class Client{
 		System.out.println(teamName + " - Finished request");
 	}
 
-	// Puts a string into a file
-	public static void putStringIntoFile(String aString, String fileName) throws FileNotFoundException{
-		try (PrintWriter out = new PrintWriter(fileName);) {
-			out.println(aString);
-		}
-	}
-
-	// Recieves the code from the server and puts it into a file
-	public static void getCodeFromServer(BufferedReader reader) throws IOException {
-		String code = "";
-		String line;
-
-		while ((line = reader.readLine()) != null) {
-			code += line + "\n";
-		}
-		putStringIntoFile(code, "codeFromServer.txt");
-	}
-
-	// Recieves the report from the server and puts it into a file
-	public static void getReportFromServer(BufferedReader reader) throws IOException {
-		String report = "";
-		String line;
-
-		while ((line = reader.readLine()) != null) {
-			report += line + "\n";
-		}
-		putStringIntoFile(report, "reportFromServer.txt");
-	}
-
 	// Process requests from the server
 	public static void processRequests() throws IOException{
 		String request;
-		boolean stopRequests = false;
-		while (stopRequests == false) {
-			request = reader.readLine();
+		while (!(request = reader.readLine()).startsWith("close")) {
 			System.out.println(teamName + " - Request received: " + request);
 			switch(request) {
 			case "get team name":
@@ -389,11 +613,7 @@ public class Client{
 			case "get location":
 				locationRequest(clientSocket);
 				break;
-			case "close":
-				getCodeFromServer(reader);
-				getReportFromServer(reader);
-				stopRequests = true;
-				break;
+			
 			}
 			
 		}
@@ -522,6 +742,7 @@ public class Client{
 					input = input.substring(0, maxSnipLength);
 				}
 				try {
+					
 					nextSnipTimestamp=peer.nextTimeStamp;
 					String snip = nextSnipTimestamp +" "+ input + " ";
 					
@@ -534,9 +755,8 @@ public class Client{
 					ArrayList<String> list=peer.activePeerList;
 					(new Thread(deleteInactivePeer)).start();
 					Thread.currentThread().sleep(10);
-					
 					//System.out.println("sending "+latestSnip);
-					peer.sendToPeers(latestSnip,list);
+					peer.sendInfo(latestSnip,list);
 					
 		
 				} catch (IOException e) {
@@ -552,42 +772,31 @@ public class Client{
 	});
 	
 	/*
-	 * Use ThreadConfinement to implement
-	 * ThreadLocal allows a thread to create a local variable for the thread.
+	 * Threadlocal allows a thread to create a local variable for the thread.
 	 * a thread could only get and set it's own local variable.
 	 * threadlocal.get() will return the variable, threadlocal.set() will set the variable
-	 * LocalThreadVariable will store the current peers in the system, the timestamp we are working on and the
-	 * snippet.
-	 * Clone the value of the peerList in the Peer, such that we do not pass by value of reference
-	 * 
+	 * we stored the snippet as the local variable, such that we can working on different snippet
+	 * the name of the snippet is the timestamp of the snippet. such that we do not have to create one more hashmap
 	 * 
 	 * thread will sleep for 10 seconds , and then send the snippets to the peers that do not send ack message
 	 * 
 	 */
 	static Runnable deleteInactivePeer = ()-> {
-			//avoid passing by the value of reference
-			@SuppressWarnings("unchecked")
-			ArrayList <String> workingList=(ArrayList<String>) peer.activePeerList.clone();
-			LocalThreadVariable v=new LocalThreadVariable(nextSnipTimestamp,latestSnip,workingList);
-			myThreadLocal.set(v);
+			myThreadLocal.set(latestSnip);
+			Thread.currentThread().setName(String.valueOf(nextSnipTimestamp));
 			int count=0;
-			ArrayList<String> responseList = null;
+			ArrayList<String> activeList = null;
 			try {
 				while(!Thread.currentThread().isInterrupted()&&!peer.stop&&count<3) {
 					Thread.sleep(10000);
 					try {
-						responseList=peer.responseToSnip.get(myThreadLocal.get().getTimestamp());
-						for(String aPeer:myThreadLocal.get().getCurrentList()) {
-							if(responseList!=null) {
-								if(!responseList.contains(aPeer)) {
-									InetAddress ip=InetAddress.getByName(aPeer.split(":")[0]);
-									int port=Integer.parseInt(aPeer.split(":")[1]);
-									System.out.println("Round "+count+" try to send snippet to "+aPeer);
-									peer.sendToServer(myThreadLocal.get().getWorkingSnippet(), ip, port);
-								}
-								
-							}else {
+						activeList=peer.responseToSnip.get(Integer.parseInt(Thread.currentThread().getName()));
+						for(String aPeer:peer.activePeerList) {
+							if(activeList!=null&&!activeList.contains(aPeer)) {
+								InetAddress ip=InetAddress.getByName(aPeer.split(":")[0]);
+								int port=Integer.parseInt(aPeer.split(":")[1]);
 								System.out.println("Round "+count+" try to send snippet to "+aPeer);
+								peer.sendMessage(myThreadLocal.get(), ip, port);
 							}
 						}
 						
@@ -597,21 +806,16 @@ public class Client{
 				}
 					count++;
 				}
-				responseList=peer.responseToSnip.get(myThreadLocal.get().getTimestamp());
-				
-				
-				for(String aPeer:myThreadLocal.get().getCurrentList()) {
-					if(responseList!=null) {
-						if(!responseList.contains(aPeer)) {
-							System.out.println(aPeer+" did not sent ack,it has been removed");
-							missingAckPeers.add(aPeer);
-							locationAndTime.remove(aPeer);
-						}
-					}else {
-						missingAckPeers.addAll(myThreadLocal.get().getCurrentList());
+				activeList=peer.responseToSnip.get(Integer.parseInt(Thread.currentThread().getName()));
+				for(String aPeer:peer.activePeerList) {
+					if(activeList!=null&&!activeList.contains(aPeer)) {
+						System.out.println(aPeer+" did not sent ack,it has been removed");
+						missingAckPeers.add(aPeer);
+						locationAndTime.remove(aPeer);
 					}
 				}
 				peer.removePeerFromActivePeerList(missingAckPeers);
+				
 				
 			}
 			catch (InterruptedException e) {
@@ -666,3 +870,4 @@ public class Client{
 		System.exit(1);
     }
 }
+
