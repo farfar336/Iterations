@@ -1,7 +1,27 @@
 package interation2;
-
 /*
 	To do:
+		-Fix UDP peer messages in report [Farrukh]
+			-Clarify with professor on what is expected (done)
+			-Implement changes
+
+		-Class diagram [Farrukh]
+			-Can add stuff on to the diagram from iteration 2
+
+		-Code documentation [Farrukh]
+			-Update source code txt file
+			-Update Code documentation
+			-Add more comments where needed
+
+		-Video demo (5-10 mins) [Farrukh]
+			-A video that gives a brief explanation of your implementation. Make sure to pay special attention to
+			explaining your implementation of the optional features. The length of your video should be between 5
+			and 10 minutes
+
+		-Submitting our work [Farrukh] 
+			-Submit April 15
+			-Submit the optional feature on port 12955
+
 		-Required part: code [Xudong] (done)
 			-Look in the iteration 3 pdf, Shutting down system requirements (stop UDP/IP messages)
 
@@ -12,35 +32,12 @@ package interation2;
 		-Required part: report [Xudong] (done)
 			-Look in the iteration 3 pdf, Updated report request (stop UDP/IP messages)
 
-		-Optional part: report [Farrukh] 
+		-Optional part: report [Xudong] (done)
 			-Look in the iteration 3 pdf, Updated Registry Communication Protocol
-
-		-Fix UDP peer messages in report [Farrukh]
-			-Clarify with professor on what is expected (done)
-			-Implement changes
-
-		-Class diagram [Farrukh] (done)
-			-Can add stuff on to the diagram from iteration 2
-
-		-Code documentation [Farrukh]
-			-Update Code documentation
-			-Add more comments where needed
-
-		-Video demo (5-10 mins) [Farrukh] (done)
-			-A video that gives a brief explanation of your implementation, shows your peer in action, and explains
-			under which circumstances a peer would not receive a stop message, even with the resends in
-			iteration 3.
-
-		-Submitting our work [Farrukh] 
-			-Submit Wednesday March 31 between 12:30pm and 1:30 pm. (done)
-			-Submit the required and optional feature on port: 55921 and 12955 respectively
 */
 
 /*
-	To do:
-		-In iteration3, check that both output files have the correct content from the server
-
-	To run, enter this in command line: java interation2/Client 136.159.5.22 55921 "Xudong Farrukh"
+	To run, enter this in command line: java interation2/Client 136.159.5.22 12955 "Xudong Farrukh"
 
  	Code documentation
 	-Functional programming is used
