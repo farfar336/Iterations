@@ -143,7 +143,7 @@ public class Client{
 	// Read the source code
 	public static String readSourceCode(){
 		String sourceCode = "";
-		String Path = "interation2"; //Change this to match your path
+		String Path = ""; //Change this to match your path
 		try {
 			File file = new File(Path, "sourceCode.txt");
 			Scanner myReader = new Scanner(file);
@@ -215,7 +215,7 @@ public class Client{
 				peers += peersArray.get(i); 
 			}
 			else{ //Add to the other entries
-				peers += "\n" + peersArray.get(i);			
+				peers += "\n" + peersArray.get(i);	
 			}
 		}
 		return peers;

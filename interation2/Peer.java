@@ -226,6 +226,7 @@ public class Peer {
 			 * 
 			 */
 			else if(message.startsWith("ack")) {
+				System.out.println(message);
 				int receivedTimestamp=Integer.parseInt(message.split(" ")[1]);
 				ackMessage+=receivedTimestamp+" "+getLocation()+"\r\n";
 				numberofAck++;
