@@ -445,8 +445,7 @@ public class Client{
 		@Override
 		public void run() {
 			Scanner keyboard = new Scanner(System.in);
-			while(!peer.stop) {
-				
+			while(!peer.stop) {		
 				String input = keyboard.nextLine();
 				if(input.length() > maxSnipLength) {
 					input = input.substring(0, maxSnipLength);

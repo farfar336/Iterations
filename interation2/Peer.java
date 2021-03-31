@@ -249,12 +249,15 @@ public class Peer {
 		message=message.replace("ctch", "");
 		String originalSender=message.split(" ")[0];
 		int receivedTimestamp=Integer.parseInt(message.split(" ")[1]);
-		nextTimeStamp=receivedTimestamp+1;
 		String snippet = message.split(" ")[2];
 
 		TimestampAndSnippet.put(receivedTimestamp, snippet+" "+originalSender);
 		snips=getSnipsFromHashmap();
-		System.out.println(snips);
+		if(receivedTimestamp>nextTimeStamp-1) {
+			System.out.println(receivedTimestamp+" "+snippet+" "+originalSender);
+			nextTimeStamp=receivedTimestamp+1;
+		}
+		
 	}
 	
 	//read the snippet from the hashmap, in the order of timestamp
