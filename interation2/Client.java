@@ -624,6 +624,7 @@ public class Client{
 
 		while(!peer.stop) {
 			receiveMessage();
+			
 		}
 
 		// Process requests after shutting down
