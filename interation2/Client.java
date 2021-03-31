@@ -488,7 +488,6 @@ public class Client{
 					input = input.substring(0, maxSnipLength);
 				}
 				try {
-					
 					nextSnipTimestamp=peer.nextTimeStamp;
 					String snip = nextSnipTimestamp +" "+ input + " ";
 					
@@ -537,7 +536,6 @@ public class Client{
 			ArrayList <String> workingList=(ArrayList<String>) peer.activePeerList.clone();
 			LocalThreadVariable v=new LocalThreadVariable(nextSnipTimestamp,latestSnip,workingList);
 			myThreadLocal.set(v);
-//			Thread.currentThread().setName(String.valueOf(nextSnipTimestamp));
 			int count=0;
 			ArrayList<String> responseList = null;
 			try {
@@ -546,11 +544,16 @@ public class Client{
 					try {
 						responseList=peer.responseToSnip.get(myThreadLocal.get().getTimestamp());
 						for(String aPeer:myThreadLocal.get().getCurrentList()) {
-							if(responseList!=null&&!responseList.contains(aPeer)) {
-								InetAddress ip=InetAddress.getByName(aPeer.split(":")[0]);
-								int port=Integer.parseInt(aPeer.split(":")[1]);
+							if(responseList!=null) {
+								if(!responseList.contains(aPeer)) {
+									InetAddress ip=InetAddress.getByName(aPeer.split(":")[0]);
+									int port=Integer.parseInt(aPeer.split(":")[1]);
+									System.out.println("Round "+count+" try to send snippet to "+aPeer);
+									peer.sendMessage(myThreadLocal.get().getWorkingSnippet(), ip, port);
+								}
+								
+							}else {
 								System.out.println("Round "+count+" try to send snippet to "+aPeer);
-								peer.sendMessage(myThreadLocal.get().getWorkingSnippet(), ip, port);
 							}
 						}
 						
