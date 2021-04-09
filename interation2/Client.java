@@ -272,7 +272,8 @@ public class Client{
 		peer.numberofAck+"\n"+
 		ackMessage
 		;
-		System.out.println("start of report \n" + report + "end of report");
+		System.out.println("Start of peersReceived: \n" +  peersReceived + "End of peersReceived: \n");
+		// System.out.println("start of report \n" + report + "end of report");
 		return report;
 	}
 	
@@ -452,16 +453,16 @@ public class Client{
 			newMessage = peer.getMessage();
 			if(newMessage!=null) {
 					String receivedPeer = newMessage.replace("peer", "");
-					String sender=peer.getPeerLocation();
+					String sourcePeer=peer.getPeerLocation();
 					snippets = peer.snips;
 					nextSnipTimestamp = peer.nextTimeStamp;
 					if(receivedPeer != null) {
 						addToPeersReceived(sourcePeer, receivedPeer);	
-						if(!currentPeerList.contains(sender)) {
-							currentPeerList.add(sender);
+						if(!currentPeerList.contains(sourcePeer)) {
+							currentPeerList.add(sourcePeer);
 						}
 						long time = new Timestamp(System.currentTimeMillis()).getTime()/1000;
-						peer.locationAndTime.put(sender,time);
+						peer.locationAndTime.put(sourcePeer,time);
 					}
 				
 			}
@@ -470,7 +471,7 @@ public class Client{
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-}
+	}
 
 	// A thread to collaborate with other peers and send peer information to them
 	static Thread collaborationThread = new Thread (new Runnable() {
