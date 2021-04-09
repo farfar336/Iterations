@@ -423,15 +423,13 @@ public class Client{
 	}
 
 	
-	// Check if the time difference between current time and recorded time is greater than 240 seconds
-	
 	
 	
 	// Store info about a message when we send a peer and format it properly
 	public static void addToPeersSent() throws UnknownHostException {
 		ArrayList<String> activePeerList = peer.activePeerList;
 		for(int i = 0; i < activePeerList.size(); i++) {
-			String toPeer = peer.getPeerLocation(activePeerList.get(i));
+			String toPeer = activePeerList.get(i);
 			String fromPeer = peer.getMyLocation(); 
 			Date aDate = new Date();
 			String dateSent = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(aDate);
@@ -441,12 +439,11 @@ public class Client{
 	
 
 	// Store info about a message when a peer is received and format it properly
-	public static void addToPeersReceived(String aPeer) throws UnknownHostException {
-		String fromPeer = peer.getPeerLocation(aPeer); 
-		String toPeer = peer.getMyLocation();
+	public static void addToPeersReceived(String receivedPeer) throws UnknownHostException {
 		Date aDate = new Date();
+		String myLocation=peer.getMyLocation();
 		String dateReceived = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(aDate);
-		peersReceived += fromPeer + " " +  toPeer + " " +  dateReceived + "\n";
+		peersReceived += receivedPeer + " " +  myLocation + " " +  dateReceived + "\n";
 	}
 
 	// Handle the logic for a when peer receives a message
@@ -455,16 +452,17 @@ public class Client{
 		try {
 			newMessage = peer.getMessage();
 			if(newMessage!=null) {
-					String newPeer = newMessage.replace("peer", "");
+					String receivedPeer = newMessage.replace("peer", "");
+					String sender=peer.getPeerLocation();
 					snippets = peer.snips;
 					nextSnipTimestamp = peer.nextTimeStamp;
-					if(newPeer != null) {
-						addToPeersReceived(newPeer);	
-						if(!currentPeerList.contains(newPeer)) {
-							currentPeerList.add(newPeer);
+					if(receivedPeer != null) {
+						addToPeersReceived(receivedPeer);	
+						if(!currentPeerList.contains(sender)) {
+							currentPeerList.add(sender);
 						}
 						long time = new Timestamp(System.currentTimeMillis()).getTime()/1000;
-						peer.locationAndTime.put(newPeer,time);
+						peer.locationAndTime.put(sender,time);
 					}
 				
 			}
