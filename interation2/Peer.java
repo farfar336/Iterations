@@ -1,10 +1,12 @@
 package interation2;
 import java.io.*;
 import java.net.*;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -43,10 +45,23 @@ public class Peer {
 	String ackMessage="";
 	ConcurrentHashMap<Integer,ArrayList<String>> responseToSnip=new ConcurrentHashMap<Integer,ArrayList<String>>();
 	HashMap<Integer, String> TimestampAndSnippet=new HashMap<Integer, String>();
+
+	// this is a hashmap that stores location and time
+	// location is the other peer's location
+	// time is the timestamp(in second) that receive the peer info from this peer's location
+	public static ConcurrentHashMap<String,Long> locationAndTime=new ConcurrentHashMap<String,Long>();
+	public static final int inactiveTimeLimit=240;
+	//contain all the peers that does not response(ack message) to snippet
+	public ArrayList<String> missingAckPeers=new ArrayList<String>();
+	//contain all the peers that does not send their peer message.
+	public ArrayList<String> silentPeers=new ArrayList<String>();
+	
+	
+	
 	// This method will setup a UDP socket and store the port number of UDP
 	public void setUpUDPserver() throws SocketException {
 		UDPserver = new DatagramSocket();
-		UDPserver.setSoTimeout(5000);
+//		UDPserver.setSoTimeout(5000);
 		UDPport = UDPserver.getLocalPort();
 	}
 	// Receive the message from other UDP
@@ -119,26 +134,6 @@ public class Peer {
 		}	
 	}
 	
-	/*
-	 * this method is used to form a catch up message
-	 * the format for every line is  
-	 * "ctch"<Original Sender>+Space+<timestamp>+space+<content>
-	 */
-//	public String getCatchUpMessages() throws UnknownHostException {
-//		String mes="";
-//		String[] snippetArray=snips.split("\n");
-//		for(String line:snippetArray) {
-//			mes+="ctch";
-//			String[] temp=line.split(" ");
-//			int timestamp=Integer.parseInt(temp[0]);
-//			String content=temp[1];
-//			String originalSender=temp[temp.length-1];
-//			mes+=originalSender+" ";
-//			mes+=timestamp+" ";
-//			mes+=content+"\n";
-//		}
-//		return mes;
-//	}
 	public String getCatchUpMessages() throws UnknownHostException {
 		String mes="";
 		String[] snippetArray=snips.split("\n");
@@ -242,8 +237,7 @@ public class Peer {
 					currentList.add(getLocation());
 					responseToSnip.put(receivedTimestamp, currentList);
 				}
-				
-				
+	
 				
 			}
 			else if(message.startsWith("ctch")) {
@@ -311,5 +305,52 @@ public class Peer {
 			sendInfo(message,activePeerList);
 		}
 	}
+	
+	public static Boolean checkTimeLimit(long currentTime,long time) {
+		return (currentTime-time) > inactiveTimeLimit;
+	}
+	
+	public void checkSilentPeer() {
+		while(!stop) {
+			long currentTime = new Timestamp(System.currentTimeMillis()).getTime()/1000;
+			for(Map.Entry<String, Long> entry : locationAndTime.entrySet()) {
+			    String location = entry.getKey();
+			    long time = entry.getValue();
+			    if(checkTimeLimit(currentTime,time)) {
+			    	System.out.println(location + "    disconnected" );
+			    	removePeerFromActivePeerList(location);
+			    	silentPeers.add(location);
+			    	locationAndTime.remove(location);
+			    }
+			}
+		}
+	}
+	public void keepSendingSnippet(ArrayList<String> responseList,String targetPeer,String snippet,int count) throws IOException {
+		if(responseList!=null) {
+			if(!responseList.contains(targetPeer)) {
+				InetAddress ip=InetAddress.getByName(targetPeer.split(":")[0]);
+				int port=Integer.parseInt(targetPeer.split(":")[1]);
+				System.out.println("Round "+count+" try to send snippet to "+targetPeer);
+				sendMessage(snippet, ip, port);
+			}
+			
+		}else {
+			System.out.println("Round "+count+" try to send snippet to "+targetPeer);
+		}
+	}
+	public void handleMissingAckPeer(ArrayList<String> responseList,String aPeer,ArrayList<String> wholeList) {
+		if(responseList!=null) {
+			if(!responseList.contains(aPeer)) {
+				System.out.println(aPeer+" did not sent ack,it has been removed");
+				missingAckPeers.add(aPeer);
+				locationAndTime.remove(aPeer);
+			}
+		}else {
+			missingAckPeers.addAll(wholeList);
+		}
+	}
+	
+	
+	
 
 }

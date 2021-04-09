@@ -12,7 +12,7 @@ public class LocalThreadVariable {
 	public LocalThreadVariable(int i, String s, ArrayList<String> list) {
 		this.timestamp=i;
 		workingSnippet=s;
-		currentList=list;
+		currentList=new ArrayList<String>(list);
 	}
 	public int getTimestamp() {
 		return this.timestamp;
