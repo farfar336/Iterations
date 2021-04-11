@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -203,6 +204,7 @@ public class Peer {
 			
 			else if(message.startsWith("peer")){
 				String peer=message.replace("peer", "");
+				addActivePeer(getPeerLocation());
 				addActivePeer(peer);
 				System.out.println("Peer added   "+peer);
 				return message;
@@ -244,6 +246,11 @@ public class Peer {
 		}
 		System.out.println("current list"+activePeerList);
 
+	}
+	
+	public String randomPeer() {
+		Random rand = new Random();
+        return activePeerList.get(rand.nextInt(activePeerList.size()));
 	}
 	public void removePeerFromActivePeerList(ArrayList<String> inactivePeerList) {
 		if(inactivePeerList!=null) {
@@ -287,10 +294,10 @@ public class Peer {
 	}
 	
 	// Send peer information
-	public void sendPeer() throws InterruptedException, IOException {
+	public void sendPeerInfo() throws InterruptedException, IOException {
 		if(activePeerList.size() > 0) {
 			String ip = InetAddress.getByName(InetAddress.getLocalHost().toString().split("/")[1]).toString();
-			String message = "peer" + ip.replace("/", "") + ":" + getPort();
+			String message = "peer" +randomPeer();
 			sendInfo(message,activePeerList);
 		}
 	}
