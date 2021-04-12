@@ -439,11 +439,11 @@ public class Client{
 	
 
 	// Store info about a message when a peer is received and format it properly
-	public static void addToPeersReceived(String receivedPeer) throws UnknownHostException {
+	public static void addToPeersReceived(String receivedPeer,String sourcePeer) throws UnknownHostException {
 		Date aDate = new Date();
 		String myLocation=peer.getMyLocation();
 		String dateReceived = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(aDate);
-		peersReceived += receivedPeer + " " +  myLocation + " " +  dateReceived + "\n";
+		peersReceived += receivedPeer + " " +  sourcePeer + " " +  dateReceived + "\n";
 	}
 
 	// Handle the logic for a when peer receives a message
@@ -457,7 +457,7 @@ public class Client{
 					snippets = peer.snips;
 					nextSnipTimestamp = peer.nextTimeStamp;
 					if(receivedPeer != null) {
-						addToPeersReceived(receivedPeer);	
+						addToPeersReceived(receivedPeer,sourcePeer);	
 						if(!currentPeerList.contains(sourcePeer)) {
 							currentPeerList.add(sourcePeer);
 						}
