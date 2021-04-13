@@ -12,6 +12,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 
 /*
+This class is the Peer class which holds peer information. It is used in the client class.
+
 Key functions:
 	-setUpUDPserver: This method will setup a UDP socket and store the port number of UDP
 	-receiveMessage: Receive the message from other UDP
@@ -19,11 +21,11 @@ Key functions:
 	-getPeerLocation: Get the location of a peer
 	-getPort: Get the port number of this UDP server
 	-getAddress: Get the IP address of the UDP server
-	-sendMessage: Send message to other UDP server
+	-sendToServer: Send message to other UDP server
 	-addActivePeer: Add peer to active peerlist
 	-setActivePeerList: Set active peer list
 	-setStop: If we receive a stop, then close the UDP
-	-sendInfo: Send info to other server
+	-sendToPeers: Send info to other server
 	-getMessage: When a peer recieves a UDP, act accordingly based on if it is a snip, stop, or peer message
 	-removePeerFromActivePeerList: Remove a peer from active peer list
 	-sendPeer: Send peer information
@@ -103,7 +105,7 @@ public class Peer {
 	}
 	
 	// Send message to other UDP server
-	public void sendMessage(String message,InetAddress IP, int port) throws IOException {
+	public void sendToServer(String message,InetAddress IP, int port) throws IOException {
 		outbuf = message.getBytes();
 		UDPoutPacket = new DatagramPacket(outbuf,outbuf.length,IP,port);
 		UDPserver.send(UDPoutPacket);
@@ -122,12 +124,13 @@ public class Peer {
 				String[] catcuUpMessagesArray=getCatchUpMessages().split("\n");
 				//we send each line at one time
 				for(String line:catcuUpMessagesArray) {
-					sendMessage(line,ip,port);
+					sendToServer(line,ip,port);
 				}
 			}
 		}	
 	}
 	
+	// When a new peer connects, it will recieve all the snippets that have been sent since the server started
 	public String getCatchUpMessages() throws UnknownHostException {
 		String mes="";
 		String[] snippetArray=snips.split("\n");
@@ -159,11 +162,11 @@ public class Peer {
 	}
 
 	// Send info to all the other peers
-	public void sendInfo(String message,ArrayList<String> list) throws IOException {
+	public void sendToPeers(String message,ArrayList<String> list) throws IOException {
 		for(int i = 0; i < list.size(); i++) {
 			InetAddress ip = InetAddress.getByName(list.get(i).split(":")[0]);
 			int port = Integer.parseInt(list.get(i).split(":")[1]);
-			sendMessage(message, ip, port);
+			sendToServer(message, ip, port);
 		}
 	}
 	
@@ -172,11 +175,11 @@ public class Peer {
 			message=receiveMessage();
 			//System.out.println("Messaged received: " + message);
 			if(message.startsWith("stop")) {
-				sendInfo("stop",activePeerList);
+				sendToPeers("stop",activePeerList);
 				InetAddress ip=InetAddress.getByName(getPeerLocation().split(":")[0]);
 				int port=Integer.parseInt(getPeerLocation().split(":")[1]);
 				String response="ack"+teamName;
-				sendMessage(response,ip,port);
+				sendToServer(response,ip,port);
 				setStop();
 				System.out.println("send  "+response+"  to "+getPeerLocation());
 			}
@@ -197,7 +200,7 @@ public class Peer {
 						snips=getSnipsFromHashmap();
 						System.out.print(snips);
 					}
-					sendMessage("ack "+receivedTimestamp,InetAddress.getByName(getPeerLocation().split(":")[0]),Integer.parseInt(getPeerLocation().split(":")[1]));
+					sendToServer("ack "+receivedTimestamp,InetAddress.getByName(getPeerLocation().split(":")[0]),Integer.parseInt(getPeerLocation().split(":")[1]));
 				}
 				
 
@@ -238,8 +241,7 @@ public class Peer {
 			return null;
 	}
 	
-	// Remove a peer from active peer list 
-	
+	// Remove a peer from the active peer list	
 	public void removePeerFromActivePeerList(String peer) {
 		if(activePeerList.contains(peer)) {
 			activePeerList.remove(activePeerList.indexOf(peer));
@@ -298,7 +300,7 @@ public class Peer {
 		if(activePeerList.size() > 0) {
 			String ip = InetAddress.getByName(InetAddress.getLocalHost().toString().split("/")[1]).toString();
 			String message = "peer" +randomPeer();
-			sendInfo(message,activePeerList);
+			sendToPeers(message,activePeerList);
 		}
 	}
 	
@@ -327,7 +329,7 @@ public class Peer {
 				InetAddress ip=InetAddress.getByName(targetPeer.split(":")[0]);
 				int port=Integer.parseInt(targetPeer.split(":")[1]);
 				System.out.println("Round "+count+" try to send snippet to "+targetPeer);
-				sendMessage(snippet, ip, port);
+				sendToServer(snippet, ip, port);
 			}
 			
 		}else {

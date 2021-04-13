@@ -1,49 +1,27 @@
 package interation2;
-
 /*
 	To do:
-		-Required part: code [Xudong]
-			-Look in the iteration 3 pdf, Shutting down system requirements (stop UDP/IP messages)
-
-		-Optional part: code [Xudong] 
-			-Look in the iteration 3 pdf, User interface and snippets requirements (snip UDP/IP messages)
-			-Look in the iteration 3 pdf, Group management requirements (peer UDP/IP messages)
-
-		-Required part: report [Farrukh]
-			-Look in the iteration 3 pdf, Updated report request (stop UDP/IP messages)
-
-		-Optional part: report [Farrukh] 
-			-Look in the iteration 3 pdf, Updated Registry Communication Protocol
-
-		-Fix UDP peer messages in report [Farrukh]
-			-Clarify with professor on what is expected
-			-Implement changes
-
 		-Class diagram [Farrukh]
 			-Can add stuff on to the diagram from iteration 2
 
 		-Code documentation [Farrukh]
 			-Update Code documentation
 			-Add more comments where needed
+			-Check that both output files have the correct content from the server
+			-Update source code txt file
 
 		-Video demo (5-10 mins) [Farrukh]
-			-A video that gives a brief explanation of your implementation, shows your peer in action, and explains
-			under which circumstances a peer would not receive a stop message, even with the resends in
-			iteration 3.
+			-A video that gives a brief explanation of your implementation. Make sure to pay special attention to
+			explaining your implementation of the optional features. The length of your video should be between 5
+			and 10 minutes
 
 		-Submitting our work [Farrukh]
-			-Friday March 26 between 10am and 10:30 am, or
-			-Friday March 26 between 11:30 and 12:30 am, or
-			-Friday March 26 between 1pm and 2pm, or
-			-Wednesday March 31 between 11am and 11:30 am, or
-			-Wednesday March 31 between 12:30pm and 1:30 pm.
-			-Submit the require and optional feature on port: 55921 and 12955 respectively
+			-Submit April 15: 10:30 and 11:30am or between 12:30 and 1:30pm
+			-Submit the required and optional features on port 55921 and 12955
+
 */
 
 /*
-To do:
--In iteration3, check that both output files have the correct content from the server
-
 To run, enter this in command line: java interation2/Client 136.159.5.22 55921 "Xudong Farrukh"
 
 /*
@@ -207,6 +185,8 @@ public class Client{
 		}
 		return peers;
 	}
+
+	// Stores content of array into a string
 	public static String arrayToString(ArrayList<String> peersArray){
 		String peers = "";
 		for (int i = 0; i < peersArray.size();i++) {
@@ -220,7 +200,7 @@ public class Client{
 		return peers;
 	}
 
-	// Returns the number of UDP
+	// Returns the number of UDP messages
 	public static int countLines(String str){
 		if (str != null){
 			String [] lines = str.split("\r\n|\r|\n");
@@ -507,7 +487,7 @@ public class Client{
 					(new Thread(deleteInactivePeer)).start();
 					//allow thread to store timestamp and snippet into threadlocal
 					Thread.currentThread().sleep(10);
-					peer.sendInfo(latestSnip,list);
+					peer.sendToPeers(latestSnip,list);
 					} 
 					catch (IOException | InterruptedException e) {
 						// TODO Auto-generated catch block
