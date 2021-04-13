@@ -1,10 +1,13 @@
 package interation2;
 import java.io.*;
 import java.net.*;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -43,12 +46,26 @@ public class Peer {
 	String ackMessage="";
 	ConcurrentHashMap<Integer,ArrayList<String>> responseToSnip=new ConcurrentHashMap<Integer,ArrayList<String>>();
 	HashMap<Integer, String> TimestampAndSnippet=new HashMap<Integer, String>();
+
+	// this is a hashmap that stores location and time
+	// location is the other peer's location
+	// time is the timestamp(in second) that receive the peer info from this peer's location
+	public static ConcurrentHashMap<String,Long> locationAndTime=new ConcurrentHashMap<String,Long>();
+	public static final int inactiveTimeLimit=240;
+	//contain all the peers that does not response(ack message) to snippet
+	public ArrayList<String> missingAckPeers=new ArrayList<String>();
+	//contain all the peers that does not send their peer message.
+	public ArrayList<String> silentPeers=new ArrayList<String>();
+	
+	
+	
 	// This method will setup a UDP socket and store the port number of UDP
 	public void setUpUDPserver() throws SocketException {
 		UDPserver = new DatagramSocket();
-		UDPserver.setSoTimeout(5000);
 		UDPport = UDPserver.getLocalPort();
 	}
+	
+	
 	// Receive the message from other UDP
 	public String receiveMessage() throws IOException {
 		UDPserver.receive(UDPinPacket);
@@ -58,24 +75,16 @@ public class Peer {
 
 	// Get the location of our peer
 	public String getMyLocation() throws UnknownHostException {
-		String IP = String.valueOf(getAddress());
+		String IP = String.valueOf(getMyAddress());
 		IP = IP.replace("/",""); //Remove the / at the beginning
 		String port = String.valueOf(UDPport);
 		String location = IP + ":" + port;
 		return location;
 	}
 
-	// Get the location of a peer
-	public String getPeerLocation(String peer) throws UnknownHostException {
-		String IP = String.valueOf(InetAddress.getByName(peer.split(":")[0]));
-		IP = IP.replace("/",""); //Remove the / at the beginning
-		String port = String.valueOf(Integer.parseInt(peer.split(":")[1]));
-		String location = IP + ":" + port;
-		return location;
-	}
 
 	//Gets the location of the peer
-	public String getLocation() {
+	public String getPeerLocation() {
 		String address = UDPinPacket.getAddress().toString().replace("/","");
 		int port = UDPinPacket.getPort();
 		String location = address + ":" + port;
@@ -88,7 +97,7 @@ public class Peer {
 	}
 	
 	// Get the IP address of the UDP server
-	public InetAddress getAddress() throws UnknownHostException {
+	public InetAddress getMyAddress() throws UnknownHostException {
 		//return InetAddress.getByName("localhost");
 		return InetAddress.getByName(InetAddress.getLocalHost().toString().split("/")[1]);
 	}
@@ -119,26 +128,6 @@ public class Peer {
 		}	
 	}
 	
-	/*
-	 * this method is used to form a catch up message
-	 * the format for every line is  
-	 * "ctch"<Original Sender>+Space+<timestamp>+space+<content>
-	 */
-//	public String getCatchUpMessages() throws UnknownHostException {
-//		String mes="";
-//		String[] snippetArray=snips.split("\n");
-//		for(String line:snippetArray) {
-//			mes+="ctch";
-//			String[] temp=line.split(" ");
-//			int timestamp=Integer.parseInt(temp[0]);
-//			String content=temp[1];
-//			String originalSender=temp[temp.length-1];
-//			mes+=originalSender+" ";
-//			mes+=timestamp+" ";
-//			mes+=content+"\n";
-//		}
-//		return mes;
-//	}
 	public String getCatchUpMessages() throws UnknownHostException {
 		String mes="";
 		String[] snippetArray=snips.split("\n");
@@ -184,18 +173,18 @@ public class Peer {
 			//System.out.println("Messaged received: " + message);
 			if(message.startsWith("stop")) {
 				sendInfo("stop",activePeerList);
-				InetAddress ip=InetAddress.getByName(getLocation().split(":")[0]);
-				int port=Integer.parseInt(getLocation().split(":")[1]);
+				InetAddress ip=InetAddress.getByName(getPeerLocation().split(":")[0]);
+				int port=Integer.parseInt(getPeerLocation().split(":")[1]);
 				String response="ack"+teamName;
 				sendMessage(response,ip,port);
 				setStop();
-				System.out.println("send  "+response+"  to "+getLocation());
+				System.out.println("send  "+response+"  to "+getPeerLocation());
 			}
 			else if(message.startsWith("snip")) {
 					String newsnip=message.replace("snip", "");
 					String[] snipArray=newsnip.split("\n");
 					int receivedTimestamp=Integer.parseInt(snipArray[snipArray.length-1].split(" ")[0]);
-					String sender=getLocation();
+					String sender=getPeerLocation();
 					//String content=snipArray[snipArray.length-1].split(" ")[1];
 					String[] snippetArray=snipArray[snipArray.length-1].split(" ");
 					String content = "";
@@ -208,14 +197,14 @@ public class Peer {
 						snips=getSnipsFromHashmap();
 						System.out.print(snips);
 					}
-					//in case the ack message is not received by the sender
-					sendMessage("ack "+receivedTimestamp,InetAddress.getByName(getLocation().split(":")[0]),Integer.parseInt(getLocation().split(":")[1]));
+					sendMessage("ack "+receivedTimestamp,InetAddress.getByName(getPeerLocation().split(":")[0]),Integer.parseInt(getPeerLocation().split(":")[1]));
 				}
 				
 
 			
 			else if(message.startsWith("peer")){
 				String peer=message.replace("peer", "");
+				addActivePeer(getPeerLocation());
 				addActivePeer(peer);
 				System.out.println("Peer added   "+peer);
 				return message;
@@ -228,26 +217,22 @@ public class Peer {
 			else if(message.startsWith("ack")) {
 				
 				int receivedTimestamp=Integer.parseInt(message.split(" ")[1]);
-				ackMessage+=receivedTimestamp+"  "+getLocation()+"\r\n";
-				System.out.println(message+"  "+getLocation());
+				ackMessage+=receivedTimestamp+"  "+getPeerLocation()+"\r\n";
+				System.out.println(message+"  "+getPeerLocation());
 				numberofAck++;
 				ArrayList <String>currentList =responseToSnip.get(receivedTimestamp);
 				if(currentList!=null) {
-					if(!currentList.contains(getLocation())) {
-						currentList.add(getLocation());
+					if(!currentList.contains(getPeerLocation())) {
+						currentList.add(getPeerLocation());
 						responseToSnip.put(receivedTimestamp, currentList);
 					}
 				}else {
 					currentList=new ArrayList<String>();
-					currentList.add(getLocation());
+					currentList.add(getPeerLocation());
 					responseToSnip.put(receivedTimestamp, currentList);
 				}
-				
-				
-				
 			}
 			else if(message.startsWith("ctch")) {
-				
 				handleCatchUpMessage(message);
 			}
 			return null;
@@ -261,6 +246,11 @@ public class Peer {
 		}
 		System.out.println("current list"+activePeerList);
 
+	}
+	
+	public String randomPeer() {
+		Random rand = new Random();
+        return activePeerList.get(rand.nextInt(activePeerList.size()));
 	}
 	public void removePeerFromActivePeerList(ArrayList<String> inactivePeerList) {
 		if(inactivePeerList!=null) {
@@ -304,12 +294,59 @@ public class Peer {
 	}
 	
 	// Send peer information
-	public void sendPeer() throws InterruptedException, IOException {
+	public void sendPeerInfo() throws InterruptedException, IOException {
 		if(activePeerList.size() > 0) {
 			String ip = InetAddress.getByName(InetAddress.getLocalHost().toString().split("/")[1]).toString();
-			String message = "peer" + ip.replace("/", "") + ":" + getPort();
+			String message = "peer" +randomPeer();
 			sendInfo(message,activePeerList);
 		}
 	}
+	
+	public static Boolean checkTimeLimit(long currentTime,long time) {
+		return (currentTime-time) > inactiveTimeLimit;
+	}
+	
+	public void checkSilentPeer() {
+		while(!stop) {
+			long currentTime = new Timestamp(System.currentTimeMillis()).getTime()/1000;
+			for(Map.Entry<String, Long> entry : locationAndTime.entrySet()) {
+			    String location = entry.getKey();
+			    long time = entry.getValue();
+			    if(checkTimeLimit(currentTime,time)) {
+			    	System.out.println(location + "    disconnected" );
+			    	removePeerFromActivePeerList(location);
+			    	silentPeers.add(location);
+			    	locationAndTime.remove(location);
+			    }
+			}
+		}
+	}
+	public void keepSendingSnippet(ArrayList<String> responseList,String targetPeer,String snippet,int count) throws IOException {
+		if(responseList!=null) {
+			if(!responseList.contains(targetPeer)) {
+				InetAddress ip=InetAddress.getByName(targetPeer.split(":")[0]);
+				int port=Integer.parseInt(targetPeer.split(":")[1]);
+				System.out.println("Round "+count+" try to send snippet to "+targetPeer);
+				sendMessage(snippet, ip, port);
+			}
+			
+		}else {
+			System.out.println("Round "+count+" try to send snippet to "+targetPeer);
+		}
+	}
+	public void handleMissingAckPeer(ArrayList<String> responseList,String aPeer,ArrayList<String> wholeList) {
+		if(responseList!=null) {
+			if(!responseList.contains(aPeer)) {
+				System.out.println(aPeer+" did not sent ack,it has been removed");
+				missingAckPeers.add(aPeer);
+				locationAndTime.remove(aPeer);
+			}
+		}else {
+			missingAckPeers.addAll(wholeList);
+		}
+	}
+	
+	
+	
 
 }
