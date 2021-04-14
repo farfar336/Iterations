@@ -2,38 +2,42 @@ package interation2;
 
 /*
 	To do:
-		-Required part: code [Xudong] (done)
+		-Required part: code [Xudong]
 			-Look in the iteration 3 pdf, Shutting down system requirements (stop UDP/IP messages)
 
-		-Optional part: code [Xudong] (done)
+		-Optional part: code [Xudong] 
 			-Look in the iteration 3 pdf, User interface and snippets requirements (snip UDP/IP messages)
 			-Look in the iteration 3 pdf, Group management requirements (peer UDP/IP messages)
 
-		-Required part: report [Xudong] (done)
+		-Required part: report [Farrukh]
 			-Look in the iteration 3 pdf, Updated report request (stop UDP/IP messages)
 
 		-Optional part: report [Farrukh] 
 			-Look in the iteration 3 pdf, Updated Registry Communication Protocol
 
 		-Fix UDP peer messages in report [Farrukh]
-			-Clarify with professor on what is expected (done)
+			-Clarify with professor on what is expected
 			-Implement changes
 
-		-Class diagram [Farrukh] (done)
+		-Class diagram [Farrukh]
 			-Can add stuff on to the diagram from iteration 2
 
 		-Code documentation [Farrukh]
 			-Update Code documentation
 			-Add more comments where needed
 
-		-Video demo (5-10 mins) [Farrukh] (done)
+		-Video demo (5-10 mins) [Farrukh]
 			-A video that gives a brief explanation of your implementation, shows your peer in action, and explains
 			under which circumstances a peer would not receive a stop message, even with the resends in
 			iteration 3.
 
-		-Submitting our work [Farrukh] 
-			-Submit Wednesday March 31 between 12:30pm and 1:30 pm. (done)
-			-Submit the required and optional feature on port: 55921 and 12955 respectively
+		-Submitting our work [Farrukh]
+			-Friday March 26 between 10am and 10:30 am, or
+			-Friday March 26 between 11:30 and 12:30 am, or
+			-Friday March 26 between 1pm and 2pm, or
+			-Wednesday March 31 between 11am and 11:30 am, or
+			-Wednesday March 31 between 12:30pm and 1:30 pm.
+			-Submit the require and optional feature on port: 55921 and 12955 respectively
 */
 
 /*
@@ -248,6 +252,10 @@ public class Client{
 		int numberOfPeersReceived = countLines(peersReceived);
 		int numberOfPeersSent = countLines(peersSent);
 		int numberOfSnippets = countLines(peer.snips);
+		String snippets=peer.snips;
+		if(peer.snips==null) {
+			snippets="";
+		}
 
 		// Format report
 		String report = 
@@ -263,7 +271,7 @@ public class Client{
 		numberOfPeersSent + "\n" +
 		peersSent +
 		numberOfSnippets + "\n" +
-		peer.snips
+		snippets
 		+
 		peer.numberofAck+"\n"+
 		ackMessage
