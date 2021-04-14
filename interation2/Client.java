@@ -14,11 +14,6 @@ import java.util.concurrent.Executors;
 
 /*
 	To do:
-		-Video demo (5-10 mins) [Farrukh]
-			-A video that gives a brief explanation of your implementation. Make sure to pay special attention to
-			explaining your implementation of the optional features. The length of your video should be between 5
-			and 10 minutes
-
 		-Submitting our work [Farrukh]
 			-Submit April 15: 10:30 and 11:30am or between 12:30 and 1:30pm
 			-Submit the required and optional features on port 55921 and 12955
