@@ -225,8 +225,8 @@ public class Peer {
 			 */
 			else if(message.startsWith("ack")) {
 				int receivedTimestamp = Integer.parseInt(message.split(" ")[1]);
-				ackMessage += receivedTimestamp +"  " + getPeerLocation() + "\r\n";
-				System.out.println(message +"  " + getPeerLocation());
+				ackMessage += receivedTimestamp + "  " + getPeerLocation() + "\r\n";
+				// System.out.println(message + "  " + getPeerLocation());
 				numberofAck++;
 				ArrayList <String>currentList  = responseToSnip.get(receivedTimestamp);
 
@@ -253,7 +253,6 @@ public class Peer {
 		if(activePeerList.contains(peer)) {
 			activePeerList.remove(activePeerList.indexOf(peer));
 		}
-		System.out.println("current list" + activePeerList);
 	}
 	
 	// Select a random peer from the active peer list
@@ -267,7 +266,7 @@ public class Peer {
 		if(inactivePeerList != null) {
 			activePeerList.removeAll(inactivePeerList);
 		}
-		System.out.println("current list" + activePeerList);
+		// System.out.println("current list" + activePeerList);
 	}
 	
 	// Handle the catch up message. Put the timestamp and snippet and sender into the hashmap.
