@@ -226,6 +226,10 @@ public class Client{
 		int numberOfPeersReceived = countLines(peersReceived);
 		int numberOfPeersSent = countLines(peersSent);
 		int numberOfSnippets = countLines(peer.snips);
+		String snippets=peer.snips;
+		if(peer.snips==null) {
+			snippets="";
+		}
 
 		// Format report
 		String report = 
